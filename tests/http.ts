@@ -1,4 +1,4 @@
-import {assertEquals, assertNotEquals} from 'https://deno.land/std@0.203.0/assert/mod.ts';
+import {assert, assertEquals} from 'https://deno.land/std@0.203.0/assert/mod.ts';
 import Decurl, {globalInit, globalCleanup} from '../decurl.ts';
 
 Deno.test('Small GET text', async _ctx => {
@@ -9,7 +9,7 @@ Deno.test('Small GET text', async _ctx => {
 	d.setUrl('https://example.com');
 	d.perform();
 
-	assertNotEquals(d.writeFunctionData, null);
+	assert(d.writeFunctionData);
 
 	if (!d.writeFunctionData)
 		return;
@@ -30,7 +30,7 @@ Deno.test('Big GET text', async _ctx => {
 	d.setUrl('https://html.spec.whatwg.org/');
 	d.perform();
 
-	assertNotEquals(d.writeFunctionData, null);
+	assert(d.writeFunctionData);
 
 	if (!d.writeFunctionData)
 		return;
@@ -51,7 +51,7 @@ Deno.test('GET PDF', async _ctx => {
 	d.setUrl('https://html.spec.whatwg.org/print.pdf');
 	d.perform();
 
-	assertNotEquals(d.writeFunctionData, null);
+	assert(d.writeFunctionData);
 
 	if (!d.writeFunctionData)
 		return;
@@ -79,8 +79,8 @@ Deno.test('Multiple handles GET', async _ctx => {
 	d1.perform();
 	d2.perform();
 
-	assertNotEquals(d1.writeFunctionData, null);
-	assertNotEquals(d2.writeFunctionData, null);
+	assert(d1.writeFunctionData);
+	assert(d2.writeFunctionData);
 
 	if (!d1.writeFunctionData || !d2.writeFunctionData)
 		return;
