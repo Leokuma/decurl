@@ -11,7 +11,8 @@ const decurl = new Decurl();
 decurl.setUrl('https://example.com');
 decurl.perform();
 
-console.log(new TextDecoder().decode(decurl.writeFunctionData));
+if (decurl.writeFunctionData)
+	console.log(new TextDecoder().decode(decurl.writeFunctionData));
 
 decurl.cleanup();
 
