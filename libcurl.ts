@@ -1,7 +1,12 @@
 import {dlopen} from 'https://deno.land/x/plug@1.0.2/mod.ts';
 
 /** https://curl.se/libcurl/c/allfuncs.html */
-const libcurl = await dlopen('/lib/x86_64-linux-gnu/libcurl.so', {
+const libcurl = await dlopen({
+	url: {
+		linux: {
+			x86_64: 'https://deno.land/x/decurl@0.1.0/bin/libcurl.so'
+		}
+	}}, {
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},
 	easyDuphandle: {name: 'curl_easy_duphandle', parameters: ['pointer'], result: 'pointer'},
 	easyEscape: {name: 'curl_easy_escape', parameters: ['pointer', 'buffer', 'i32'], result: 'buffer'},

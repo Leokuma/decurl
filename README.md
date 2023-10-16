@@ -2,7 +2,7 @@
 [Curl](https://curl.se/libcurl/) bindings for Deno.
 
 ```ts
-import Decurl, {globalInit, globalCleanup} from 'decurl.ts';
+import Decurl, {globalInit, globalCleanup} from 'https://deno.land/x/decurl/decurl.ts';
 
 globalInit();
 
@@ -23,5 +23,6 @@ More examples in the [tests](./tests/) folder.
 `libcurl` must be installed.
 
 ## Roadmap
-- **Better OS support**: currently only works in Linux.
+- **Support Windows and Mac**: currently only works in Linux.
+- **Support ARM**: currently only works in amd64.
 - **Async operations**: currently the entire API is blocking.
