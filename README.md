@@ -18,6 +18,8 @@ decurl.cleanup();
 globalCleanup();
 ```
 
+Run with `deno run -A --unstable`.
+
 More examples in the [tests](./tests/) folder.
 
 `libcurl` must be installed.
