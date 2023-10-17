@@ -148,9 +148,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('CAINFO'), txtEnc.encode(val + '\0'))
 	}
 
-	setCainfoBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('CAINFO_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setCainfoBlob(val: string): Code {
+	// } // = 'CAINFO_BLOB'
 
 	setCapath(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('CAPATH'), txtEnc.encode(val + '\0'))
@@ -536,9 +536,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('ISSUERCERT'), txtEnc.encode(val + '\0'))
 	}
 
-	setIssuercertBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('ISSUERCERT_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setIssuercertBlob(val: string): Code {
+	// } // = 'ISSUERCERT_BLOB'
 
 	setKeepSendingOnError(val: number): Code {
 		return sym.easySetoptU64(this.#handle, this.optionByName('KEEP_SENDING_ON_ERROR'), val);
@@ -784,9 +784,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_CAINFO'), txtEnc.encode(val + '\0'))
 	}
 
-	setProxyCainfoBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_CAINFO_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setProxyCainfoBlob(val: string): Code {
+	// } // = 'PROXY_CAINFO_BLOB'
 
 	setProxyCapath(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_CAPATH'), txtEnc.encode(val + '\0'))
@@ -800,9 +800,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_ISSUERCERT'), txtEnc.encode(val + '\0'))
 	}
 
-	setProxyIssuercertBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_ISSUERCERT_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setProxyIssuercertBlob(val: string): Code {
+	// } // = 'PROXY_ISSUERCERT_BLOB'
 
 	setProxyKeypasswd(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_KEYPASSWD'), txtEnc.encode(val + '\0'))
@@ -824,9 +824,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_SSLCERTTYPE'), txtEnc.encode(val + '\0'))
 	}
 
-	setProxySslcertBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_SSLCERT_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setProxySslcertBlob(val: string): Code {
+	// } // = 'PROXY_SSLCERT_BLOB'
 
 	setProxySslkey(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_SSLKEY'), txtEnc.encode(val + '\0'))
@@ -836,9 +836,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_SSLKEYTYPE'), txtEnc.encode(val + '\0'))
 	}
 
-	setProxySslkeyBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('PROXY_SSLKEY_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setProxySslkeyBlob(val: string): Code {
+	// } // = 'PROXY_SSLKEY_BLOB'
 
 	setProxySslversion(val: number): Code {
 		return sym.easySetoptU64(this.#handle, this.optionByName('PROXY_SSLVERSION'), val);
@@ -1068,9 +1068,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLCERTTYPE'), txtEnc.encode(val + '\0'))
 	}
 
-	setSslcertBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLCERT_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setSslcertBlob(val: string): Code {
+	// } // = 'SSLCERT_BLOB'
 
 	setSslengine(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLENGINE'), txtEnc.encode(val + '\0'))
@@ -1088,9 +1088,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLKEYTYPE'), txtEnc.encode(val + '\0'))
 	}
 
-	setSslkeyBlob(val: string): Code {
-		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLKEY_BLOB'), txtEnc.encode(val + '\0'))
-	}
+	/** @todo */
+	// setSslkeyBlob(val: string): Code {
+	// } // = 'SSLKEY_BLOB'
 
 	setSslversion(val: number): Code {
 		return sym.easySetoptU64(this.#handle, this.optionByName('SSLVERSION'), val);
