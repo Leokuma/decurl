@@ -1,5 +1,5 @@
 import libcurl from './libcurl.ts';
-import {Code, EasyHandle, GlobalInit} from './types.ts';
+import {Code, CurlBlob, EasyHandle, GlobalInit} from './types.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
@@ -72,6 +72,7 @@ export default class Decurl {
 	cleanup() {
 		sym.easyCleanup(this.#handle);
 		this.#_writeFunction?.close();
+		this.#writeFunctionData = null;
 	}
 
 	// easySetopt(opt: Opt, param: string | number | Deno.UnsafeCallback /** @todo type callback */): Code {
@@ -92,7 +93,7 @@ export default class Decurl {
 
 		if (!p)	throw new Error(`Option ${name} not found`);
 
-		return Deno.UnsafePointer.create(new Deno.UnsafePointerView(p).getUint32(8));
+		return Deno.UnsafePointer.create(new Deno.UnsafePointerView(p).getUint32(8)); /** @todo Use `byte_type` */
 	}
 
 	perform(): Code {
@@ -1068,9 +1069,9 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLCERTTYPE'), txtEnc.encode(val + '\0'))
 	}
 
-	/** @todo */
-	// setSslcertBlob(val: string): Code {
-	// } // = 'SSLCERT_BLOB'
+	setSslcertBlob(cert: ArrayBuffer): Code {
+		return sym.easySetoptBlob(this.#handle, this.optionByName('SSLCERT_BLOB'), CurlBlob(cert));
+	}
 
 	setSslengine(val: string): Code {
 		return sym.easySetoptBuffer(this.#handle, this.optionByName('SSLENGINE'), txtEnc.encode(val + '\0'))

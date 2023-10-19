@@ -10,7 +10,7 @@ const libcurl = await dlopen({
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},
 	easyDuphandle: {name: 'curl_easy_duphandle', parameters: ['pointer'], result: 'pointer'},
 	easyEscape: {name: 'curl_easy_escape', parameters: ['pointer', 'buffer', 'i32'], result: 'buffer'},
-	// easy_getinfo: {name: 'curl_easy_getinfo', parameters: ['pointer', ]
+	/** @todo easy_getinfo: {name: 'curl_easy_getinfo', parameters: ['pointer', ] // https://curl.se/libcurl/c/curl_easy_getinfo.html */
 	// easy_header: {name: 'curl_easy_header', parameters: ['pointer', 'buffer', 'usize', 'u32', 'i32', 'pointer'], result: 'i32'},
 	easyInit: {name: 'curl_easy_init', parameters: [], result: 'pointer'},
 	// easy_nextheader: {name: 'curl_easy_nextheader', parameters: [''], result: ''},
@@ -26,6 +26,7 @@ const libcurl = await dlopen({
 	easySetoptFunction: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'function'], result: 'i32'},
 	easySetoptU64: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'u64'], result: 'i32'},
 	easySetoptPointer: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'pointer'], result: 'i32'},
+	easySetoptBlob: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'pointer'], result: 'i32'},
 	easyStrerror: {name: 'curl_easy_strerror', parameters: ['i32'], result: 'buffer'},
 	easyUnescape: {name: 'curl_easy_unescape', parameters: ['pointer', 'buffer', 'i32', 'pointer'], result: 'buffer'},
 	// easy_upkeep: {parameters: [''], result: ''},

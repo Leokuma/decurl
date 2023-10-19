@@ -1,6 +1,11 @@
-export type EasyHandle = Deno.PointerValue;
+export {Auth, Code, CurlBlob, type EasyHandle, FtpAuth, GlobalInit};
 
-export enum Auth {
+import {AlignedStruct} from 'https://deno.land/x/byte_type@0.2.2/types/struct/aligned.ts';
+import {u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
+
+type EasyHandle = Deno.PointerValue;
+
+enum Auth {
   None = 0,
   Basic = 1 << 0,
   Digest = 1 << 1,
@@ -18,7 +23,7 @@ export enum Auth {
 }
 
 /** https://curl.se/libcurl/c/libcurl-errors.html */
-export enum Code {
+enum Code {
 	Ok = 0,
 	UnsupportedProtocol,
 	FailedInit,
@@ -122,20 +127,40 @@ export enum Code {
 	Last // never use!
 }
 
-export enum FtpAuth {
+enum FtpAuth {
   Default,
   Ssl,
   Tls,
 }
 
 /** https://curl.se/libcurl/c/curl_global_init.html */
-export enum GlobalInit {
+enum GlobalInit {
   Nothing = 0,
   Ssl = 1 << 0, // no purpose since 7.57.0
   Win32 = 1 << 1,
   All = (Ssl | Win32),
   Default = All,
   AckEintr = 1 << 2,
+}
+
+const curlBlobStruct = new AlignedStruct({
+	pData: u64,
+	len: u64,
+	flags: u32
+});
+/** https://github.com/curl/curl/blob/913eacf7730429f3de5d662691154ceb2aee8aa5/include/curl/easy.h#L34 */
+function CurlBlob(content: ArrayBuffer): Deno.PointerValue {
+	const ptr = Deno.UnsafePointer.of(content);
+	const buf = new ArrayBuffer(20);
+	const dv = new DataView(buf);
+
+	curlBlobStruct.write({
+		pData: BigInt(Deno.UnsafePointer.value(ptr)),
+		len: BigInt(content.byteLength),
+		flags: 0
+	}, dv);
+
+	return Deno.UnsafePointer.of(buf);
 }
 
 /** Multi interface */
