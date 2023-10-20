@@ -75,6 +75,7 @@ export default class Decurl {
 	cleanup() {
 		sym.slistFreeAll(this.#httpHeaderList);
 		sym.easyCleanup(this.#p);
+		this.#errorBuffer = null;
 		this.#_writeFunction?.close();
 		this.#writeFunction = null;
 		this.#writeFunctionData = null;
