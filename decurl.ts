@@ -1,5 +1,5 @@
 import libcurl from './libcurl.ts';
-import {Code, CString, CurlBlob, GlobalInit} from './types.ts';
+import {Code, CString, CurlBlob, ERROR_SIZE, GlobalInit} from './types.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
@@ -20,7 +20,10 @@ export function globalCleanup() {
 	}
 }
 
+const txtDec = new TextDecoder();
+
 export default class Decurl {
+	#errorBuffer: ArrayBuffer | null = null;
 	#httpHeaderList: Deno.PointerValue = null;
 	#writeFunction: null | ((chunk: Uint8Array) => void) = null;
 	#_writeFunction: Deno.UnsafeCallback<{
@@ -100,6 +103,7 @@ export default class Decurl {
 	}
 
 	perform(): Code {
+		this.#errorBuffer = null;
 		this.#writeFunctionData = null;
 		return sym.easyPerform(this.#p);
 	}
@@ -324,9 +328,20 @@ export default class Decurl {
 		return sym.easySetoptBuffer(this.#p, this.optionByName('EGDSOCKET'), CString(val))
 	}
 
-	/** @todo */
-	// setErrorbuffer(): Code {
-	// } // = 'ERRORBUFFER'
+	getErrorbuffer(): string | null {
+		if (!this.#errorBuffer)
+			return null;
+
+		return txtDec.decode(this.#errorBuffer);
+	}
+
+	setErrorbuffer(buf: ArrayBuffer): Code {
+		if (buf.byteLength < ERROR_SIZE)
+			throw new Error('Error buffer must be at least ' + ERROR_SIZE + ' bytes big.');
+
+		this.#errorBuffer = buf;
+		return sym.easySetoptBuffer(this.#p, this.optionByName('ERRORBUFFER'), this.#errorBuffer);
+	}
 
 	setExpect100TimeoutMs(val: number): Code {
 		return sym.easySetoptU64(this.#p, this.optionByName('EXPECT_100_TIMEOUT_MS'), val);

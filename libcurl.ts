@@ -21,7 +21,7 @@ const libcurl = await dlopen({
 	easyPerform: {name: 'curl_easy_perform', parameters: ['pointer'], result: 'i32'},
 	// easy_recv: {name: 'curl_easy_recv', parameters: [''], result: ''},
 	easyReset: {name: 'curl_easy_reset', parameters: ['pointer'], result: 'void'},
-	easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: 'i32'},
+	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: 'i32'},
 	easySetoptBuffer: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'buffer'], result: 'i32'},
 	easySetoptFunction: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'function'], result: 'i32'},
 	easySetoptU64: {name: 'curl_easy_setopt', parameters: ['pointer', 'pointer', 'u64'], result: 'i32'},
@@ -40,16 +40,16 @@ const libcurl = await dlopen({
 	// global_init_mem: {parameters: [''], result: ''},
 	globalSslset: {name: 'curl_global_sslset', parameters: ['u32', 'buffer', 'pointer'], result: 'i32'},
 	// global_trace: {name: 'curl_global_trace', parameters: ['buffer'], result: 'i32'},
-	// mime_addpart: {parameters: [''], result: ''},
-	// mime_data: {parameters: [''], result: ''},
+	// mime_addpart: {parameters: [''], result: ''}, /** @todo */
+	// mime_data: {parameters: [''], result: ''}, /** @todo */
 	// mime_data_cb: {parameters: [''], result: ''},
 	// mime_encoder: {parameters: [''], result: ''},
 	// mime_filedata: {parameters: [''], result: ''},
 	// mime_filename: {parameters: [''], result: ''},
 	// mime_free: {parameters: [''], result: ''},
 	// mime_headers: {parameters: [''], result: ''},
-	// mime_init: {parameters: [''], result: ''},
-	// mime_name: {parameters: [''], result: ''},
+	// mime_init: {parameters: [''], result: ''}, /** @todo */
+	// mime_name: {parameters: [''], result: ''}, /** @todo */
 	// mime_subparts: {parameters: [''], result: ''},
 	// mime_type: {parameters: [''], result: ''},
 	// multi_add_handle: {parameters: [''], result: ''},

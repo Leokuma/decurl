@@ -164,6 +164,8 @@ function CurlBlob(content: ArrayBuffer): Deno.PointerValue {
 	return Deno.UnsafePointer.of(buf);
 }
 
+const ERROR_SIZE = 1024;
+
 /** Multi interface */
 // export enum Mopt {
 // }
@@ -736,4 +738,4 @@ function CurlBlob(content: ArrayBuffer): Deno.PointerValue {
 // 	Xoauth2Bearer = 'XOAUTH2_BEARER'
 // }
 
-export {Auth, Code, CString, CurlBlob, FtpAuth, GlobalInit};
+export {Auth, Code, CString, CurlBlob, ERROR_SIZE, FtpAuth, GlobalInit};
