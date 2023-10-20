@@ -1,9 +1,5 @@
-export {Auth, Code, CurlBlob, type EasyHandle, FtpAuth, GlobalInit};
-
 import {AlignedStruct} from 'https://deno.land/x/byte_type@0.2.2/types/struct/aligned.ts';
 import {u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
-
-type EasyHandle = Deno.PointerValue;
 
 enum Auth {
   None = 0,
@@ -141,6 +137,11 @@ enum GlobalInit {
   All = (Ssl | Win32),
   Default = All,
   AckEintr = 1 << 2,
+}
+
+const txtEnc = new TextEncoder();
+function CString(val: string | number | bigint) {
+	return txtEnc.encode(val + '\0');
 }
 
 const curlBlobStruct = new AlignedStruct({
@@ -734,3 +735,5 @@ function CurlBlob(content: ArrayBuffer): Deno.PointerValue {
 // 	Userpwd = 'USERPWD',
 // 	Xoauth2Bearer = 'XOAUTH2_BEARER'
 // }
+
+export {Auth, Code, CString, CurlBlob, FtpAuth, GlobalInit};

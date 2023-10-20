@@ -73,8 +73,8 @@ const libcurl = await dlopen({
 	// share_init: {parameters: [''], result: ''},
 	// share_setopt: {parameters: [''], result: ''},
 	// share_strerror: {parameters: [''], result: ''},
-	// slist_append: {parameters: [{struct: []}, 'buffer'], result: {struct: }}, // @todo typing
-	// slist_free_all: {parameters: [''], result: ''}, // @todo typing
+	slistAppend: {name: 'curl_slist_append', parameters: ['pointer', 'buffer'], result: 'pointer'},
+	slistFreeAll: {name: 'curl_slist_free_all', parameters: ['pointer'], result: 'void'},
 	url: {name: 'curl_url', parameters: [], result: 'pointer'},
 	urlCleanup: {name: 'curl_url_cleanup', parameters: ['pointer'], result: 'void'},
 	// url_dup: {parameters: [''], result: ''},
