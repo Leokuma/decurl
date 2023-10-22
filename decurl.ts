@@ -1,5 +1,5 @@
 import libcurl from './libcurl.ts';
-import {Code, CString, CurlBlob, ERROR_SIZE, GlobalInit} from './types.ts';
+import {Code, CString, CurlBlob, EasyOption, ERROR_SIZE, GlobalInit, Opt} from './types.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
@@ -64,7 +64,7 @@ export default class Decurl {
 			return size;
 		});
 
-		sym.easySetoptFunction(this.#p, this.optionByName('WRITEFUNCTION'), this.#_writeFunction.pointer);
+		sym.easySetoptFunction(this.#p, this.optionByName(Opt.Writefunction).id, this.#_writeFunction.pointer);
 	}
 
 	init(): Deno.PointerValue {
@@ -82,25 +82,12 @@ export default class Decurl {
 		this.#p = null;
 	}
 
-	// easySetopt(opt: Opt, param: string | number | Deno.UnsafeCallback /** @todo type callback */): Code {
-	// 	const pOpt = this.optionByName(opt);
-
-	// 	if (typeof param == 'string')
-	// 		return sym.easySetoptBuffer(this.#handle, pOpt, CString(param))
-	// 	else if (typeof param == 'number')
-	// 		return sym.easySetoptU64(this.#handle, pOpt, param)
-	// 	else if (param instanceof Deno.UnsafeCallback)
-	// 		return sym.easySetoptFunction(this.#handle, pOpt, param.pointer);
-	// 	else
-	// 		throw new Error('Error setting option ' + opt);
-	// }
-
-	optionByName(name: string): Deno.PointerValue<number> {
+	optionByName(name: Opt): EasyOption {
 		const p = sym.easyOptionByName(CString(name));
 
 		if (!p)	throw new Error(`Option ${name} not found`);
 
-		return Deno.UnsafePointer.create(new Deno.UnsafePointerView(p).getUint32(8)); /** @todo Use `byte_type` */
+		return EasyOption(p);
 	}
 
 	perform(): Code {
@@ -114,47 +101,47 @@ export default class Decurl {
 	}
 
 	setAbstractUnixSocket(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ABSTRACT_UNIX_SOCKET'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.AbstractUnixSocket).id, CString(val))
 	}
 
 	setAccepttimeoutMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('ACCEPTTIMEOUT_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.AccepttimeoutMs).id, val);
 	}
 
 	setAcceptEncoding(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ACCEPT_ENCODING'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.AcceptEncoding).id, CString(val))
 	}
 
 	setAddressScope(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('ADDRESS_SCOPE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.AddressScope).id, val);
 	}
 
 	setAltsvc(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ALTSVC'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Altsvc).id, CString(val))
 	}
 
 	setAltsvcCtrl(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ALTSVC_CTRL'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.AltsvcCtrl).id, CString(val))
 	}
 
 	setAppend(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('APPEND'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Append).id, val);
 	}
 
 	setAutoreferer(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('AUTOREFERER'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Autoreferer).id, val);
 	}
 
 	setAwsSigv4(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('AWS_SIGV4'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.AwsSigv4).id, CString(val))
 	}
 
 	setBuffersize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('BUFFERSIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Buffersize).id, val);
 	}
 
 	setCainfo(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('CAINFO'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Cainfo).id, CString(val))
 	}
 
 	/** @todo */
@@ -162,15 +149,15 @@ export default class Decurl {
 	// } // = 'CAINFO_BLOB'
 
 	setCapath(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('CAPATH'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Capath).id, CString(val))
 	}
 
 	setCaCacheTimeout(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CA_CACHE_TIMEOUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.CaCacheTimeout).id, val);
 	}
 
 	setCertinfo(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CERTINFO'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Certinfo).id, val);
 	}
 
 	/** @todo */
@@ -194,15 +181,15 @@ export default class Decurl {
 	// } // = 'CLOSESOCKETFUNCTION'
 
 	setConnecttimeout(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CONNECTTIMEOUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Connecttimeout).id, val);
 	}
 
 	setConnecttimeoutMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CONNECTTIMEOUT_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ConnecttimeoutMs).id, val);
 	}
 
 	setConnectOnly(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CONNECT_ONLY'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ConnectOnly).id, val);
 	}
 
 	/** @todo */
@@ -222,35 +209,35 @@ export default class Decurl {
 	// } // = 'CONV_TO_NETWORK_FUNCTION'
 
 	setCookie(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('COOKIE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Cookie).id, CString(val))
 	}
 
 	setCookiefile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('COOKIEFILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Cookiefile).id, CString(val))
 	}
 
 	setCookiejar(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('COOKIEJAR'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Cookiejar).id, CString(val))
 	}
 
 	setCookielist(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('COOKIELIST'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Cookielist).id, CString(val))
 	}
 
 	setCookiesession(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('COOKIESESSION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Cookiesession).id, val);
 	}
 
 	setCopypostfields(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('COPYPOSTFIELDS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Copypostfields).id, CString(val))
 	}
 
 	setCrlf(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('CRLF'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Crlf).id, val);
 	}
 
 	setCrlfile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('CRLFILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Crlfile).id, CString(val))
 	}
 
 	/** @todo */
@@ -258,7 +245,7 @@ export default class Decurl {
 	// } // = 'CURLU'
 
 	setCustomrequest(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('CUSTOMREQUEST'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Customrequest).id, CString(val))
 	}
 
 	/** @todo */
@@ -270,63 +257,63 @@ export default class Decurl {
 	// } // = 'DEBUGFUNCTION'
 
 	setDefaultProtocol(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DEFAULT_PROTOCOL'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DefaultProtocol).id, CString(val))
 	}
 
 	setDirlistonly(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DIRLISTONLY'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Dirlistonly).id, val);
 	}
 
 	setDisallowUsernameInUrl(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DISALLOW_USERNAME_IN_URL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DisallowUsernameInUrl).id, val);
 	}
 
 	setDnsCacheTimeout(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DNS_CACHE_TIMEOUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DnsCacheTimeout).id, val);
 	}
 
 	setDnsInterface(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DNS_INTERFACE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DnsInterface).id, CString(val))
 	}
 
 	setDnsLocalIp4(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DNS_LOCAL_IP4'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DnsLocalIp4).id, CString(val))
 	}
 
 	setDnsLocalIp6(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DNS_LOCAL_IP6'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DnsLocalIp6).id, CString(val))
 	}
 
 	setDnsServers(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DNS_SERVERS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DnsServers).id, CString(val))
 	}
 
 	setDnsShuffleAddresses(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DNS_SHUFFLE_ADDRESSES'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DnsShuffleAddresses).id, val);
 	}
 
 	setDnsUseGlobalCache(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DNS_USE_GLOBAL_CACHE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DnsUseGlobalCache).id, val);
 	}
 
 	setDohSslVerifyhost(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DOH_SSL_VERIFYHOST'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DohSslVerifyhost).id, val);
 	}
 
 	setDohSslVerifypeer(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DOH_SSL_VERIFYPEER'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DohSslVerifypeer).id, val);
 	}
 
 	setDohSslVerifystatus(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('DOH_SSL_VERIFYSTATUS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.DohSslVerifystatus).id, val);
 	}
 
 	setDohUrl(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('DOH_URL'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.DohUrl).id, CString(val))
 	}
 
 	setEgdsocket(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('EGDSOCKET'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Egdsocket).id, CString(val))
 	}
 
 	getErrorbuffer(): string | null {
@@ -341,19 +328,19 @@ export default class Decurl {
 			throw new Error('Error buffer must be at least ' + ERROR_SIZE + ' bytes big.');
 
 		this.#errorBuffer = buf;
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ERRORBUFFER'), this.#errorBuffer);
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Errorbuffer).id, this.#errorBuffer);
 	}
 
 	setExpect100TimeoutMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('EXPECT_100_TIMEOUT_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Expect100TimeoutMs).id, val);
 	}
 
 	setFailonerror(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FAILONERROR'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Failonerror).id, val);
 	}
 
 	setFiletime(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FILETIME'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Filetime).id, val);
 	}
 
 	/** @todo */
@@ -365,79 +352,79 @@ export default class Decurl {
 	// } // = 'FNMATCH_FUNCTION'
 
 	setFollowlocation(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FOLLOWLOCATION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Followlocation).id, val);
 	}
 
 	setForbidReuse(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FORBID_REUSE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ForbidReuse).id, val);
 	}
 
 	setFreshConnect(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FRESH_CONNECT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FreshConnect).id, val);
 	}
 
 	setFtpport(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('FTPPORT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Ftpport).id, CString(val))
 	}
 
 	setFtpsslauth(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTPSSLAUTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Ftpsslauth).id, val);
 	}
 
 	setFtpAccount(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('FTP_ACCOUNT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.FtpAccount).id, CString(val))
 	}
 
 	setFtpAlternativeToUser(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('FTP_ALTERNATIVE_TO_USER'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.FtpAlternativeToUser).id, CString(val))
 	}
 
 	setFtpCreateMissingDirs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_CREATE_MISSING_DIRS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpCreateMissingDirs).id, val);
 	}
 
 	setFtpFilemethod(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_FILEMETHOD'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpFilemethod).id, val);
 	}
 
 	setFtpSkipPasvIp(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_SKIP_PASV_IP'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpSkipPasvIp).id, val);
 	}
 
 	setFtpSslCcc(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_SSL_CCC'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpSslCcc).id, val);
 	}
 
 	setFtpUseEprt(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_USE_EPRT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpUseEprt).id, val);
 	}
 
 	setFtpUseEpsv(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_USE_EPSV'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpUseEpsv).id, val);
 	}
 
 	setFtpUsePret(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('FTP_USE_PRET'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.FtpUsePret).id, val);
 	}
 
 	setGssapiDelegation(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('GSSAPI_DELEGATION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.GssapiDelegation).id, val);
 	}
 
 	setHappyEyeballsTimeoutMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HAPPY_EYEBALLS_TIMEOUT_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HappyEyeballsTimeoutMs).id, val);
 	}
 
 	setHaproxyprotocol(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HAPROXYPROTOCOL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Haproxyprotocol).id, val);
 	}
 
 	setHaproxyClientIp(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('HAPROXY_CLIENT_IP'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.HaproxyClientIp).id, CString(val))
 	}
 
 	setHeader(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HEADER'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Header).id, val);
 	}
 
 	/** @todo */
@@ -449,15 +436,15 @@ export default class Decurl {
 	// } // = 'HEADERFUNCTION'
 
 	setHeaderopt(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HEADEROPT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Headeropt).id, val);
 	}
 
 	setHsts(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('HSTS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Hsts).id, CString(val))
 	}
 
 	setHstsreaddata(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('HSTSREADDATA'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Hstsreaddata).id, CString(val))
 	}
 
 	/** @todo */
@@ -465,7 +452,7 @@ export default class Decurl {
 	// } // 'HSTSREADFUNCTION'
 
 	setHstswritedata(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('HSTSWRITEDATA'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Hstswritedata).id, CString(val))
 	}
 
 	/** @todo */
@@ -473,11 +460,11 @@ export default class Decurl {
 	// } // 'HSTSWRITEFUNCTION'
 
 	setHstsCtrl(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HSTS_CTRL'), val)
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HstsCtrl).id, val)
 	}
 
 	setHttp09Allowed(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTP09_ALLOWED'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Http09Allowed).id, val);
 	}
 
 	/** @todo */
@@ -485,11 +472,11 @@ export default class Decurl {
 	// } // = 'HTTP200ALIASES'
 
 	setHttpauth(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTPAUTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Httpauth).id, val);
 	}
 
 	setHttpget(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTPGET'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Httpget).id, val);
 	}
 
 	setHttpheader(header: Record<string, string | number | bigint>): Code {
@@ -499,7 +486,7 @@ export default class Decurl {
 		for (const [k, v] of Object.entries(header))
 			this.#httpHeaderList = sym.slistAppend(this.#httpHeaderList, CString(`${k}: ${v}`));
 
-		return sym.easySetoptPointer(this.#p, this.optionByName('HTTPHEADER'), this.#httpHeaderList);
+		return sym.easySetoptPointer(this.#p, this.optionByName(Opt.Httpheader).id, this.#httpHeaderList);
 	}
 
 	/** @todo */
@@ -507,27 +494,27 @@ export default class Decurl {
 	// } // = 'HTTPPOST'
 
 	setHttpproxytunnel(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTPPROXYTUNNEL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Httpproxytunnel).id, val);
 	}
 
 	setHttpContentDecoding(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTP_CONTENT_DECODING'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HttpContentDecoding).id, val);
 	} // = 'HTTP_CONTENT_DECODING'
 
 	setHttpTransferDecoding(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTP_TRANSFER_DECODING'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HttpTransferDecoding).id, val);
 	}
 
 	setHttpVersion(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('HTTP_VERSION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HttpVersion).id, val);
 	}
 
 	setIgnoreContentLength(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('IGNORE_CONTENT_LENGTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.IgnoreContentLength).id, val);
 	}
 
 	setInfilesize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('INFILESIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Infilesize).id, val);
 	}
 
 	/** @todo */
@@ -535,7 +522,7 @@ export default class Decurl {
 	// } // = 'INFILESIZE_LARGE'
 
 	setInterface(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('INTERFACE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Interface).id, CString(val))
 	}
 
 	/** @todo */
@@ -555,11 +542,11 @@ export default class Decurl {
 	// } // = 'IOCTLFUNCTION'
 
 	setIpresolve(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('IPRESOLVE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Ipresolve).id, val);
 	}
 
 	setIssuercert(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('ISSUERCERT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Issuercert).id, CString(val))
 	}
 
 	/** @todo */
@@ -567,43 +554,43 @@ export default class Decurl {
 	// } // = 'ISSUERCERT_BLOB'
 
 	setKeepSendingOnError(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('KEEP_SENDING_ON_ERROR'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.KeepSendingOnError).id, val);
 	}
 
 	setKeypasswd(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('KEYPASSWD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Keypasswd).id, CString(val))
 	}
 
 	setKrblevel(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('KRBLEVEL'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Krblevel).id, CString(val))
 	}
 
 	setLocalport(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('LOCALPORT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Localport).id, val);
 	}
 
 	setLocalportrange(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('LOCALPORTRANGE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Localportrange).id, val);
 	}
 
 	setLoginOptions(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('LOGIN_OPTIONS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.LoginOptions).id, CString(val))
 	}
 
 	setLowSpeedLimit(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('LOW_SPEED_LIMIT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.LowSpeedLimit).id, val);
 	}
 
 	setLowSpeedTime(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('LOW_SPEED_TIME'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.LowSpeedTime).id, val);
 	}
 
 	setMailAuth(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('MAIL_AUTH'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.MailAuth).id, CString(val))
 	}
 
 	setMailFrom(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('MAIL_FROM'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.MailFrom).id, CString(val))
 	}
 
 	/** @todo */
@@ -611,19 +598,19 @@ export default class Decurl {
 	// } // = 'MAIL_RCPT'
 
 	setMailRcptAllowfails(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAIL_RCPT_ALLOWFAILS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.MailRcptAllowfails).id, val);
 	}
 
 	setMaxageConn(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAXAGE_CONN'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.MaxageConn).id, val);
 	}
 
 	setMaxconnects(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAXCONNECTS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Maxconnects).id, val);
 	}
 
 	setMaxfilesize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAXFILESIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Maxfilesize).id, val);
 	}
 
 	/** @todo */
@@ -631,11 +618,11 @@ export default class Decurl {
 	// } // = 'MAXFILESIZE_LARGE'
 
 	setMaxlifetimeConn(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAXLIFETIME_CONN'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.MaxlifetimeConn).id, val);
 	}
 
 	setMaxredirs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MAXREDIRS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Maxredirs).id, val);
 	}
 
 	/** @todo */
@@ -651,39 +638,39 @@ export default class Decurl {
 	// } // = 'MIMEPOST'
 
 	setMimeOptions(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('MIME_OPTIONS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.MimeOptions).id, val);
 	}
 
 	setNetrc(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NETRC'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Netrc).id, val);
 	}
 
 	setNetrcFile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('NETRC_FILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.NetrcFile).id, CString(val))
 	}
 
 	setNewDirectoryPerms(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NEW_DIRECTORY_PERMS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.NewDirectoryPerms).id, val);
 	}
 
 	setNewFilePerms(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NEW_FILE_PERMS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.NewFilePerms).id, val);
 	}
 
 	setNobody(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NOBODY'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Nobody).id, val);
 	}
 
 	setNoprogress(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NOPROGRESS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Noprogress).id, val);
 	}
 
 	setNoproxy(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('NOPROXY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Noproxy).id, CString(val))
 	}
 
 	setNosignal(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('NOSIGNAL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Nosignal).id, val);
 	}
 
 	/** @todo */
@@ -695,27 +682,27 @@ export default class Decurl {
 	// } // = 'OPENSOCKETFUNCTION'
 
 	setPassword(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PASSWORD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Password).id, CString(val))
 	}
 
 	setPathAsIs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PATH_AS_IS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.PathAsIs).id, val);
 	}
 
 	setPinnedpublickey(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PINNEDPUBLICKEY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Pinnedpublickey).id, CString(val))
 	}
 
 	setPipewait(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PIPEWAIT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Pipewait).id, val);
 	}
 
 	setPort(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PORT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Port).id, val);
 	}
 
 	setPost(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('POST'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Post).id, val);
 	}
 
 	/** @todo */
@@ -723,7 +710,7 @@ export default class Decurl {
 	// } // = 'POSTFIELDS'
 
 	setPostfieldsize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('POSTFIELDSIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Postfieldsize).id, val);
 	} // = 'POSTFIELDSIZE'
 
 	/** @todo */
@@ -735,7 +722,7 @@ export default class Decurl {
 	// } // = 'POSTQUOTE'
 
 	setPostredir(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('POSTREDIR'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Postredir).id, val);
 	}
 
 	/** @todo */
@@ -751,7 +738,7 @@ export default class Decurl {
 	// } // = 'PREREQFUNCTION'
 
 	setPreProxy(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PRE_PROXY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.PreProxy).id, CString(val))
 	}
 
 	/** @todo */
@@ -767,47 +754,47 @@ export default class Decurl {
 	// } // = 'PROGRESSFUNCTION'
 
 	setProtocols(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROTOCOLS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Protocols).id, val);
 	}
 
 	setProtocolsStr(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROTOCOLS_STR'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProtocolsStr).id, CString(val))
 	}
 
 	setProxy(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Proxy).id, CString(val))
 	}
 
 	setProxyauth(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXYAUTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Proxyauth).id, val);
 	}
 
 	setProxyheader(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXYHEADER'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Proxyheader).id, CString(val))
 	}
 
 	setProxypassword(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXYPASSWORD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Proxypassword).id, CString(val))
 	}
 
 	setProxyport(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXYPORT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Proxyport).id, val);
 	}
 
 	setProxytype(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXYTYPE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Proxytype).id, val);
 	}
 
 	setProxyusername(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXYUSERNAME'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Proxyusername).id, CString(val))
 	}
 
 	setProxyuserpwd(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXYUSERPWD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Proxyuserpwd).id, CString(val))
 	}
 
 	setProxyCainfo(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_CAINFO'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyCainfo).id, CString(val))
 	}
 
 	/** @todo */
@@ -815,15 +802,15 @@ export default class Decurl {
 	// } // = 'PROXY_CAINFO_BLOB'
 
 	setProxyCapath(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_CAPATH'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyCapath).id, CString(val))
 	}
 
 	setProxyCrlfile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_CRLFILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyCrlfile).id, CString(val))
 	}
 
 	setProxyIssuercert(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_ISSUERCERT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyIssuercert).id, CString(val))
 	}
 
 	/** @todo */
@@ -831,23 +818,23 @@ export default class Decurl {
 	// } // = 'PROXY_ISSUERCERT_BLOB'
 
 	setProxyKeypasswd(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_KEYPASSWD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyKeypasswd).id, CString(val))
 	}
 
 	setProxyPinnedpublickey(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_PINNEDPUBLICKEY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyPinnedpublickey).id, CString(val))
 	}
 
 	setProxyServiceName(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SERVICE_NAME'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyServiceName).id, CString(val))
 	}
 
 	setProxySslcert(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SSLCERT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxySslcert).id, CString(val))
 	}
 
 	setProxySslcerttype(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SSLCERTTYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxySslcerttype).id, CString(val))
 	}
 
 	/** @todo */
@@ -855,11 +842,11 @@ export default class Decurl {
 	// } // = 'PROXY_SSLCERT_BLOB'
 
 	setProxySslkey(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SSLKEY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxySslkey).id, CString(val))
 	}
 
 	setProxySslkeytype(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SSLKEYTYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxySslkeytype).id, CString(val))
 	}
 
 	/** @todo */
@@ -867,51 +854,51 @@ export default class Decurl {
 	// } // = 'PROXY_SSLKEY_BLOB'
 
 	setProxySslversion(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXY_SSLVERSION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ProxySslversion).id, val);
 	}
 
 	setProxySslCipherList(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_SSL_CIPHER_LIST'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxySslCipherList).id, CString(val))
 	}
 
 	setProxySslOptions(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXY_SSL_OPTIONS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ProxySslOptions).id, val);
 	}
 
 	setProxySslVerifyhost(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXY_SSL_VERIFYHOST'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ProxySslVerifyhost).id, val);
 	}
 
 	setProxySslVerifypeer(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXY_SSL_VERIFYPEER'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ProxySslVerifypeer).id, val);
 	}
 
 	setProxyTls13Ciphers(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_TLS13_CIPHERS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyTls13Ciphers).id, CString(val))
 	}
 
 	setProxyTlsauthPassword(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_TLSAUTH_PASSWORD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyTlsauthPassword).id, CString(val))
 	}
 
 	setProxyTlsauthType(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_TLSAUTH_TYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyTlsauthType).id, CString(val))
 	}
 
 	setProxyTlsauthUsername(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('PROXY_TLSAUTH_USERNAME'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ProxyTlsauthUsername).id, CString(val))
 	}
 
 	setProxyTransferMode(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PROXY_TRANSFER_MODE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ProxyTransferMode).id, val);
 	}
 
 	setPut(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('PUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Put).id, val);
 	}
 
 	setQuickExit(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('QUICK_EXIT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.QuickExit).id, val);
 	}
 
 	/** @todo */
@@ -919,11 +906,11 @@ export default class Decurl {
 	// } // = 'QUOTE'
 
 	setRandomFile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('RANDOM_FILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RandomFile).id, CString(val))
 	}
 
 	setRange(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('RANGE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Range).id, CString(val))
 	}
 
 	/** @todo */
@@ -935,19 +922,19 @@ export default class Decurl {
 	// } // = 'READFUNCTION'
 
 	setRedirProtocols(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('REDIR_PROTOCOLS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.RedirProtocols).id, val);
 	}
 
 	setRedirProtocolsStr(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('REDIR_PROTOCOLS_STR'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RedirProtocolsStr).id, CString(val))
 	}
 
 	setReferer(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('REFERER'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Referer).id, CString(val))
 	}
 
 	setRequestTarget(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('REQUEST_TARGET'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RequestTarget).id, CString(val))
 	}
 
 	/** @todo */
@@ -963,7 +950,7 @@ export default class Decurl {
 	// } // = 'RESOLVER_START_FUNCTION'
 
 	setResumeFrom(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('RESUME_FROM'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ResumeFrom).id, val);
 	}
 
 	/** @todo */
@@ -971,35 +958,35 @@ export default class Decurl {
 	// } // = 'RESUME_FROM_LARGE'
 
 	setRtspClientCseq(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('RTSP_CLIENT_CSEQ'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.RtspClientCseq).id, val);
 	}
 
 	setRtspRequest(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('RTSP_REQUEST'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.RtspRequest).id, val);
 	}
 
 	setRtspServerCseq(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('RTSP_SERVER_CSEQ'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.RtspServerCseq).id, val);
 	}
 
 	setRtspSessionId(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('RTSP_SESSION_ID'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RtspSessionId).id, CString(val))
 	}
 
 	setRtspStreamUri(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('RTSP_STREAM_URI'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RtspStreamUri).id, CString(val))
 	}
 
 	setRtspTransport(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('RTSP_TRANSPORT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.RtspTransport).id, CString(val))
 	}
 
 	setSaslAuthzid(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SASL_AUTHZID'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SaslAuthzid).id, CString(val))
 	}
 
 	setSaslIr(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SASL_IR'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SaslIr).id, val);
 	}
 
 	/** @todo */
@@ -1011,11 +998,11 @@ export default class Decurl {
 	// } // = 'SEEKFUNCTION'
 
 	setServerResponseTimeout(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SERVER_RESPONSE_TIMEOUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.ServerResponseTimeout).id, val);
 	}
 
 	setServiceName(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SERVICE_NAME'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.ServiceName).id, CString(val))
 	}
 
 	/** @todo */
@@ -1031,23 +1018,23 @@ export default class Decurl {
 	// } // = 'SOCKOPTFUNCTION'
 
 	setSocks5Auth(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SOCKS5_AUTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Socks5Auth).id, val);
 	}
 
 	setSocks5GssapiNec(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SOCKS5_GSSAPI_NEC'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Socks5GssapiNec).id, val);
 	}
 
 	setSocks5GssapiService(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SOCKS5_GSSAPI_SERVICE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Socks5GssapiService).id, CString(val))
 	}
 
 	setSshAuthTypes(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSH_AUTH_TYPES'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SshAuthTypes).id, val);
 	}
 
 	setSshCompression(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSH_COMPRESSION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SshCompression).id, val);
 	}
 
 	/** @todo */
@@ -1059,11 +1046,11 @@ export default class Decurl {
 	// } // = 'SSH_HOSTKEYFUNCTION'
 
 	setSshHostPublicKeyMd5(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSH_HOST_PUBLIC_KEY_MD5'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SshHostPublicKeyMd5).id, CString(val))
 	}
 
 	setSshHostPublicKeySha256(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSH_HOST_PUBLIC_KEY_SHA256'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SshHostPublicKeySha256).id, CString(val))
 	}
 
 	/** @todo */
@@ -1075,43 +1062,43 @@ export default class Decurl {
 	// } // = 'SSH_KEYFUNCTION'
 
 	setSshKnownhosts(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSH_KNOWNHOSTS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SshKnownhosts).id, CString(val))
 	}
 
 	setSshPrivateKeyfile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSH_PRIVATE_KEYFILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SshPrivateKeyfile).id, CString(val))
 	}
 
 	setSshPublicKeyfile(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSH_PUBLIC_KEYFILE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SshPublicKeyfile).id, CString(val))
 	}
 
 	setSslcert(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSLCERT'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Sslcert).id, CString(val))
 	}
 
 	setSslcerttype(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSLCERTTYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Sslcerttype).id, CString(val))
 	}
 
 	setSslcertBlob(cert: ArrayBuffer): Code {
-		return sym.easySetoptBlob(this.#p, this.optionByName('SSLCERT_BLOB'), CurlBlob(cert));
+		return sym.easySetoptBlob(this.#p, this.optionByName(Opt.SslcertBlob).id, CurlBlob(cert));
 	}
 
 	setSslengine(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSLENGINE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Sslengine).id, CString(val))
 	}
 
 	setSslengineDefault(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSLENGINE_DEFAULT'), val)
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslengineDefault).id, val)
 	}
 
 	setSslkey(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSLKEY'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Sslkey).id, CString(val))
 	}
 
 	setSslkeytype(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSLKEYTYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Sslkeytype).id, CString(val))
 	}
 
 	/** @todo */
@@ -1119,11 +1106,11 @@ export default class Decurl {
 	// } // = 'SSLKEY_BLOB'
 
 	setSslversion(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSLVERSION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Sslversion).id, val);
 	}
 
 	setSslCipherList(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSL_CIPHER_LIST'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SslCipherList).id, CString(val))
 	}
 
 	/** @todo */
@@ -1135,42 +1122,42 @@ export default class Decurl {
 	// } // = 'SSL_CTX_FUNCTION'
 
 	setSslEcCurves(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('SSL_EC_CURVES'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.SslEcCurves).id, CString(val))
 	}
 
 	setSslEnableAlpn(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_ENABLE_ALPN'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslEnableAlpn).id, val);
 	}
 
 	setSslEnableNpn(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_ENABLE_NPN'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslEnableNpn).id, val);
 	}
 
 	setSslFalsestart(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_FALSESTART'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslFalsestart).id, val);
 	}
 
 	setSslOptions(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_OPTIONS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslOptions).id, val);
 	}
 
 	setSslSessionidCache(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_SESSIONID_CACHE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslSessionidCache).id, val);
 	}
 
 	setSslVerifyhost(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_VERIFYHOST'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslVerifyhost).id, val);
 	}
 
 	setSslVerifypeer(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_VERIFYPEER'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslVerifypeer).id, val);
 	}
 
 	setSslVerifystatus(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SSL_VERIFYSTATUS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SslVerifystatus).id, val);
 	}
 
-	/** @todo */
+	/** @todo Doesn't work in Windows */
 	// setStderr(): Code {
 	// } // = 'STDERR'
 
@@ -1183,31 +1170,31 @@ export default class Decurl {
 	// } // = 'STREAM_DEPENDS_E'
 
 	setStreamWeight(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('STREAM_WEIGHT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.StreamWeight).id, val);
 	}
 
 	setSuppressConnectHeaders(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('SUPPRESS_CONNECT_HEADERS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.SuppressConnectHeaders).id, val);
 	}
 
 	setTcpFastopen(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TCP_FASTOPEN'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TcpFastopen).id, val);
 	}
 
 	setTcpKeepalive(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TCP_KEEPALIVE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TcpKeepalive).id, val);
 	}
 
 	setTcpKeepidle(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TCP_KEEPIDLE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TcpKeepidle).id, val);
 	}
 
 	setTcpKeepintvl(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TCP_KEEPINTVL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TcpKeepintvl).id, val);
 	}
 
 	setTcpNodelay(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TCP_NODELAY'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TcpNodelay).id, val);
 	}
 
 	/** @todo */
@@ -1215,27 +1202,27 @@ export default class Decurl {
 	// } // = 'TELNETOPTIONS'
 
 	setTftpBlksize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TFTP_BLKSIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TftpBlksize).id, val);
 	}
 
 	setTftpNoOptions(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TFTP_NO_OPTIONS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TftpNoOptions).id, val);
 	}
 
 	setTimecondition(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TIMECONDITION'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Timecondition).id, val);
 	}
 
 	setTimeout(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TIMEOUT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Timeout).id, val);
 	}
 
 	setTimeoutMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TIMEOUT_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TimeoutMs).id, val);
 	}
 
 	setTimevalue(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TIMEVALUE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Timevalue).id, val);
 	}
 
 	/** @todo */
@@ -1243,19 +1230,19 @@ export default class Decurl {
 	// } // = 'TIMEVALUE_LARGE'
 
 	setTls13Ciphers(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('TLS13_CIPHERS'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Tls13Ciphers).id, CString(val))
 	}
 
 	setTlsauthPassword(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('TLSAUTH_PASSWORD'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.TlsauthPassword).id, CString(val))
 	}
 
 	setTlsauthType(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('TLSAUTH_TYPE'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.TlsauthType).id, CString(val))
 	}
 
 	setTlsauthUsername(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('TLSAUTH_USERNAME'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.TlsauthUsername).id, CString(val))
 	}
 
 	/** @todo */
@@ -1267,59 +1254,59 @@ export default class Decurl {
 	// } // = 'TRAILERFUNCTION'
 
 	setTransfertext(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TRANSFERTEXT'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Transfertext).id, val);
 	}
 
 	setTransferEncoding(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('TRANSFERE_NCODING'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.TransferEncoding).id, val);
 	}
 
 	setUnixSocketPath(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('UNIX_SOCKET_PATH'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.UnixSocketPath).id, CString(val))
 	}
 
 	setUnrestrictedAuth(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('UNRESTRICTED_AUTH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.UnrestrictedAuth).id, val);
 	}
 
 	setUpkeepIntervalMs(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('UPKEEP_INTERVAL_MS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.UpkeepIntervalMs).id, val);
 	}
 
 	setUpload(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('UPLOAD'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Upload).id, val);
 	}
 
 	setUploadBuffersize(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('UPLOAD_BUFFERSIZE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.UploadBuffersize).id, val);
 	}
 
 	setUrl(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('URL'), CString(val));
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Url).id, CString(val));
 	}
 
 	setUseragent(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('USERAGENT'), CString(val));
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Useragent).id, CString(val));
 	}
 
 	setUsername(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('USERNAME'), CString(val));
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Username).id, CString(val));
 	}
 
 	setUserpwd(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('USERPWD'), CString(val));
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Userpwd).id, CString(val));
 	}
 
 	setUseSsl(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('USE_SSL'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.UseSsl).id, val);
 	}
 
 	setVerbose(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('VERBOSE'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Verbose).id, val);
 	}
 
 	setWildcardmatch(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('WILDCARDMATCH'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Wildcardmatch).id, val);
 	}
 
 	/** @todo */
@@ -1331,7 +1318,7 @@ export default class Decurl {
 	}
 
 	setWsOptions(val: number): Code {
-		return sym.easySetoptU64(this.#p, this.optionByName('WS_OPTIONS'), val);
+		return sym.easySetoptU64(this.#p, this.optionByName(Opt.WsOptions).id, val);
 	}
 
 	/** @todo */
@@ -1343,6 +1330,6 @@ export default class Decurl {
 	// } // = 'XFERINFOFUNCTION'
 
 	setXoauth2Bearer(val: string): Code {
-		return sym.easySetoptBuffer(this.#p, this.optionByName('XOAUTH2_BEARER'), CString(val))
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Xoauth2Bearer).id, CString(val))
 	}
 }
