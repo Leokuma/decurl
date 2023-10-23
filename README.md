@@ -1,6 +1,8 @@
 # Decurl
 [Curl](https://curl.se/libcurl/) bindings for Deno.
 
+The goal of this library is not to provide an ergonomic layer on top of Curl, but to provide a 1:1 usage parity with Curl with a few convenient helpers.
+
 ```ts
 import Decurl, {globalInit, globalCleanup} from 'https://deno.land/x/decurl/decurl.ts';
 
@@ -21,7 +23,7 @@ globalCleanup();
 
 Run with `deno run -A --unstable`.
 
-More examples in the [tests](./tests/) folder.
+More examples in the `tests` folder.
 
 `libcurl` must be installed.
 
