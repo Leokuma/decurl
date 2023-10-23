@@ -1,5 +1,5 @@
 import {AlignedStruct} from 'https://deno.land/x/byte_type@0.2.2/types/struct/aligned.ts';
-import {u8, u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
+import {u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
 
 enum Auth {
   None = 0,
@@ -162,14 +162,14 @@ const curlBlobStruct = new AlignedStruct({
 	flags: u32
 });
 /** https://github.com/curl/curl/blob/913eacf7730429f3de5d662691154ceb2aee8aa5/include/curl/easy.h#L34 */
-function CurlBlob(content: ArrayBuffer): Deno.PointerValue {
-	const ptr = Deno.UnsafePointer.of(content);
+function CurlBlob(data: ArrayBuffer): Deno.PointerValue {
+	const ptr = Deno.UnsafePointer.of(data);
 	const buf = new ArrayBuffer(20);
 	const dv = new DataView(buf);
 
 	curlBlobStruct.write({
 		pData: BigInt(Deno.UnsafePointer.value(ptr)),
-		len: BigInt(content.byteLength),
+		len: BigInt(data.byteLength),
 		flags: 0
 	}, dv);
 
@@ -195,8 +195,7 @@ function EasyOption(pEasyOption: Deno.PointerObject): EasyOption {
 	const struct = curlEasyOptionStruct.read(dv);
 	const ptrName = Deno.UnsafePointer.create(struct.pName);
 
-	if (!ptrName)
-		throw new Error(`Could not parse EasyOption`);
+	if (!ptrName) throw new Error('Could not parse the EasyOption struct');
 
 	const name = Deno.UnsafePointerView.getCString(ptrName);
 
@@ -209,6 +208,15 @@ function EasyOption(pEasyOption: Deno.PointerObject): EasyOption {
 }
 
 const ERROR_SIZE = 1024;
+
+interface MimePart {
+	name: string,
+	filename?: string
+	data: string | ArrayBuffer,
+	headers?: Record<string, string | number | bigint>,
+	type?: string,
+	subparts?: MimePart[]
+}
 
 /** Multi interface */
 // export enum Mopt {
@@ -782,4 +790,4 @@ export enum Opt {
 // 	Xoauth2Bearer = 'XOAUTH2_BEARER'
 // }
 
-export {Auth, Code, CString, CurlBlob, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit};
+export {Auth, Code, CString, CurlBlob, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit, type MimePart};

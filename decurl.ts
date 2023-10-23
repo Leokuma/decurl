@@ -1,5 +1,5 @@
 import libcurl from './libcurl.ts';
-import {Code, CString, CurlBlob, EasyOption, ERROR_SIZE, GlobalInit, Opt} from './types.ts';
+import {Code, CString, CurlBlob, EasyOption, ERROR_SIZE, GlobalInit, MimePart, Opt} from './types.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
@@ -21,10 +21,17 @@ export function globalCleanup() {
 }
 
 const txtDec = new TextDecoder();
+const txtEnc = new TextEncoder();
+
+type Mime = {
+	p: Deno.PointerValue
+	parts: Map<MimePart, Deno.PointerObject>
+}
 
 export default class Decurl {
 	#errorBuffer: ArrayBuffer | null = null;
 	#httpHeaderList: Deno.PointerValue = null;
+	#mime: Mime = {p: null, parts: new Map()};
 	#writeFunction: null | ((chunk: Uint8Array) => void) = null;
 	#_writeFunction: Deno.UnsafeCallback<{
 		readonly parameters: readonly ['buffer', 'i32', 'i32', 'pointer'];
@@ -74,6 +81,7 @@ export default class Decurl {
 	/** https://curl.se/libcurl/c/curl_easy_cleanup.html */
 	cleanup() {
 		sym.slistFreeAll(this.#httpHeaderList);
+		sym.mimeFree(this.#mime.p);
 		sym.easyCleanup(this.#p);
 		this.#errorBuffer = null;
 		this.#_writeFunction?.close();
@@ -479,17 +487,17 @@ export default class Decurl {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Httpget).id, val);
 	}
 
-	setHttpheader(header: Record<string, string | number | bigint>): Code {
+	setHttpheader(headers: Record<string, string | number | bigint>): Code {
 		sym.slistFreeAll(this.#httpHeaderList);
 		this.#httpHeaderList = null;
 
-		for (const [k, v] of Object.entries(header))
+		for (const [k, v] of Object.entries(headers))
 			this.#httpHeaderList = sym.slistAppend(this.#httpHeaderList, CString(`${k}: ${v}`));
 
 		return sym.easySetoptPointer(this.#p, this.optionByName(Opt.Httpheader).id, this.#httpHeaderList);
 	}
 
-	/** @todo */
+	/** @deprecated */
 	// setHttppost(): Code {
 	// } // = 'HTTPPOST'
 
@@ -499,7 +507,7 @@ export default class Decurl {
 
 	setHttpContentDecoding(val: number): Code {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HttpContentDecoding).id, val);
-	} // = 'HTTP_CONTENT_DECODING'
+	}
 
 	setHttpTransferDecoding(val: number): Code {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.HttpTransferDecoding).id, val);
@@ -634,8 +642,36 @@ export default class Decurl {
 	// } // = 'MAX_SEND_SPEED_LARGE'
 
 	/** @todo */
-	// setMimepost(): Code {
-	// } // = 'MIMEPOST'
+	setMimepost(mimePart: MimePart): Code {
+		if (!this.#mime.p) {
+			const p = sym.mimeInit(this.#p);
+			if (!p) throw new Error('Mime could not be initialized');
+			this.#mime.p = p;
+		}
+
+		let pMimePart = this.#mime.parts.get(mimePart);
+		if (!pMimePart) {
+			const _mimePart = sym.mimeAddpart(this.#mime.p);
+			if (!_mimePart) throw new Error('Mime part could not be initialized');
+			this.#mime.parts.set(mimePart, _mimePart);
+			pMimePart = _mimePart;
+		}
+
+		sym.mimeName(pMimePart, CString(mimePart.name));
+
+		if (mimePart.filename)
+			sym.mimeFilename(pMimePart, CString(mimePart.filename));
+
+		let buf: ArrayBuffer;
+		if (typeof mimePart.data == 'string')
+			buf = txtEnc.encode(mimePart.data);
+		else
+			buf = mimePart.data;
+		
+		sym.mimeData(pMimePart, buf, buf.byteLength);
+
+		return sym.easySetoptPointer(this.#p, this.optionByName(Opt.Mimepost).id, this.#mime.p);
+	}
 
 	setMimeOptions(val: number): Code {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.MimeOptions).id, val);
@@ -705,13 +741,16 @@ export default class Decurl {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Post).id, val);
 	}
 
-	/** @todo */
-	// setPostfields(): Code {
-	// } // = 'POSTFIELDS'
+	setPostfields(data: string | ArrayBuffer): Code {
+		if (typeof data == 'string')
+			data = CString(data);
+
+		return sym.easySetoptBuffer(this.#p, this.optionByName(Opt.Postfields).id, data)
+	}
 
 	setPostfieldsize(val: number): Code {
 		return sym.easySetoptU64(this.#p, this.optionByName(Opt.Postfieldsize).id, val);
-	} // = 'POSTFIELDSIZE'
+	}
 
 	/** @todo */
 	// setPostfieldsizeLarge(): Code {

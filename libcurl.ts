@@ -1,5 +1,11 @@
 import {dlopen} from 'https://deno.land/x/plug@1.0.2/mod.ts';
 
+const CURL_CODE = 'i32';
+const EASY_HANDLE = 'pointer';
+const MIME_HANDLE = 'pointer';
+const MIME_PART = 'pointer';
+const OPT_ID = 'u32';
+
 /** https://curl.se/libcurl/c/allfuncs.html */
 const libcurl = await dlopen({
 	url: {
@@ -8,8 +14,8 @@ const libcurl = await dlopen({
 		}
 	}}, {
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},
-	easyDuphandle: {name: 'curl_easy_duphandle', parameters: ['pointer'], result: 'pointer'},
-	easyEscape: {name: 'curl_easy_escape', parameters: ['pointer', 'buffer', 'i32'], result: 'buffer'},
+	// easyDuphandle: {name: 'curl_easy_duphandle', parameters: ['pointer'], result: 'pointer'},
+	// easyEscape: {name: 'curl_easy_escape', parameters: ['pointer', 'buffer', 'i32'], result: 'buffer'},
 	/** @todo easy_getinfo: {name: 'curl_easy_getinfo', parameters: ['pointer', ] // https://curl.se/libcurl/c/curl_easy_getinfo.html */
 	// easy_header: {name: 'curl_easy_header', parameters: ['pointer', 'buffer', 'usize', 'u32', 'i32', 'pointer'], result: 'i32'},
 	easyInit: {name: 'curl_easy_init', parameters: [], result: 'pointer'},
@@ -18,40 +24,40 @@ const libcurl = await dlopen({
 	easyOptionByName: {name: 'curl_easy_option_by_name', parameters: ['buffer'], result: 'pointer'},
 	// easy_option_next: {name: 'curl_easy_option_next', parameters: [''], result: ''},
 	// easy_pause: {name: 'curl_easy_pause', parameters: [''], result: ''},
-	easyPerform: {name: 'curl_easy_perform', parameters: ['pointer'], result: 'i32'},
+	easyPerform: {name: 'curl_easy_perform', parameters: [EASY_HANDLE], result: CURL_CODE},
 	// easyRecv: {name: 'curl_easy_recv', parameters: [''], result: ''}, /** @todo */
 	// easyReset: {name: 'curl_easy_reset', parameters: ['pointer'], result: 'void'}, /** @todo */
-	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: 'i32'}, /** @todo */
-	easySetoptBuffer: {name: 'curl_easy_setopt', parameters: ['pointer', 'u32', 'buffer'], result: 'i32'},
-	easySetoptFunction: {name: 'curl_easy_setopt', parameters: ['pointer', 'u32', 'function'], result: 'i32'},
-	easySetoptU64: {name: 'curl_easy_setopt', parameters: ['pointer', 'u32', 'u64'], result: 'i32'},
-	easySetoptPointer: {name: 'curl_easy_setopt', parameters: ['pointer', 'u32', 'pointer'], result: 'i32'},
-	easySetoptBlob: {name: 'curl_easy_setopt', parameters: ['pointer', 'u32', 'pointer'], result: 'i32'},
+	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: CURL_CODE}, /** @todo */
+	easySetoptBuffer: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'buffer'], result: CURL_CODE},
+	easySetoptFunction: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE},
+	easySetoptU64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'u64'], result: CURL_CODE},
+	easySetoptPointer: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
+	easySetoptBlob: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
 	easyStrerror: {name: 'curl_easy_strerror', parameters: ['i32'], result: 'buffer'},
 	// easyUnescape: {name: 'curl_easy_unescape', parameters: ['pointer', 'buffer', 'i32', 'pointer'], result: 'buffer'},
 	// easy_upkeep: {parameters: [''], result: ''},
 	// formadd: {parameters: [''], result: 'i32'},
 	// formfree: {parameters: [''], result: ''},
 	// formget: {parameters: [''], result: ''},
-	free: {name: 'curl_free', parameters: ['pointer'], result: 'void'},
+	// free: {name: 'curl_free', parameters: ['pointer'], result: 'void'},
 	// getdate: {parameters: [''], result: ''},
 	globalCleanup: {name: 'curl_global_cleanup', parameters: [], result: 'void'},
-	globalInit: {name: 'curl_global_init', parameters: ['i64'], result: 'i32'},
+	globalInit: {name: 'curl_global_init', parameters: ['i64'], result: CURL_CODE},
 	// global_init_mem: {parameters: [''], result: ''},
 	globalSslset: {name: 'curl_global_sslset', parameters: ['u32', 'buffer', 'pointer'], result: 'i32'},
 	// global_trace: {name: 'curl_global_trace', parameters: ['buffer'], result: 'i32'},
-	// mime_addpart: {parameters: [''], result: ''}, /** @todo */
-	// mime_data: {parameters: [''], result: ''}, /** @todo */
+	mimeAddpart: {name: 'curl_mime_addpart', parameters: [MIME_HANDLE], result: 'pointer'},
+	mimeData: {name: 'curl_mime_data', parameters: [MIME_PART, 'buffer', 'u64'], result: CURL_CODE},
 	// mime_data_cb: {parameters: [''], result: ''},
 	// mime_encoder: {parameters: [''], result: ''},
 	// mime_filedata: {parameters: [''], result: ''},
-	// mime_filename: {parameters: [''], result: ''}, /** @todo */
-	// mime_free: {parameters: [''], result: ''},
-	// mime_headers: {parameters: [''], result: ''},
-	// mime_init: {parameters: [''], result: ''}, /** @todo */
-	// mime_name: {parameters: [''], result: ''}, /** @todo */
-	// mime_subparts: {parameters: [''], result: ''},
-	// mime_type: {parameters: [''], result: ''},
+	mimeFilename: {name: 'curl_mime_filename', parameters: [MIME_PART, 'buffer'], result: CURL_CODE},
+	mimeFree: {name: 'curl_mime_free', parameters: [MIME_HANDLE], result: 'void'},
+	mimeHeaders: {name: 'curl_mime_headers', parameters: [MIME_PART, 'pointer', 'u32'], result: CURL_CODE},
+	mimeInit: {name: 'curl_mime_init', parameters: [EASY_HANDLE], result: 'pointer'},
+	mimeName: {name: 'curl_mime_name', parameters: [MIME_PART, 'buffer'], result: CURL_CODE},
+	mimeSubparts: {name: 'curl_mime_subparts', parameters: [MIME_PART, MIME_HANDLE], result: CURL_CODE},
+	mimeType: {name: 'curl_mime_type', parameters: [MIME_PART, 'buffer'], result: CURL_CODE},
 	// multi_add_handle: {parameters: [''], result: ''},
 	// multi_assign: {parameters: [''], result: ''},
 	// multi_cleanup: {parameters: [''], result: ''},
