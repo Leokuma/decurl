@@ -28,12 +28,12 @@ type Mime = {
 	parts: Map<MimePart, Deno.PointerObject>
 }
 
-export default class Decurl {
+export default class Decurl implements Disposable {
 	#errorBuffer: ArrayBuffer | null = null;
 	#httpHeaderList: Deno.PointerValue = null;
 	#mime: Mime = {p: null, parts: new Map()};
 	#writeFunction: null | ((chunk: Uint8Array) => void) = null;
-	#_writeFunction: Deno.UnsafeCallback<{
+	#_writeFunction: null | Deno.UnsafeCallback<{
 		readonly parameters: readonly ['buffer', 'i32', 'i32', 'pointer'];
 		readonly result: 'usize';
 	}>;
@@ -85,9 +85,14 @@ export default class Decurl {
 		sym.easyCleanup(this.#p);
 		this.#errorBuffer = null;
 		this.#_writeFunction?.close();
+		this.#_writeFunction = null;
 		this.#writeFunction = null;
 		this.#writeFunctionData = null;
 		this.#p = null;
+	}
+
+	[Symbol.dispose]() {
+		this.cleanup();
 	}
 
 	optionByName(name: Opt): EasyOption {

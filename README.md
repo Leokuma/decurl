@@ -8,15 +8,13 @@ import Decurl, {globalInit, globalCleanup} from 'https://deno.land/x/decurl/decu
 
 globalInit();
 
-const decurl = new Decurl();
+using decurl = new Decurl();
 
 decurl.setUrl('https://example.com');
 decurl.perform();
 
 if (decurl.writeFunctionData)
 	console.log(new TextDecoder().decode(decurl.writeFunctionData));
-
-decurl.cleanup();
 
 globalCleanup();
 ```

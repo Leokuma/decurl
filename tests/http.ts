@@ -4,7 +4,7 @@ import Decurl, {globalInit, globalCleanup} from '../decurl.ts';
 Deno.test('Small GET text', async _ctx => {
 	globalInit();
 
-	const d = new Decurl();
+	using d = new Decurl();
 
 	d.setUrl('https://example.com');
 	d.perform();
@@ -18,14 +18,13 @@ Deno.test('Small GET text', async _ctx => {
 
 	assertEquals(new TextDecoder().decode(d.writeFunctionData), fetchRes);
 
-	d.cleanup();
 	globalCleanup();
 })
 
 Deno.test('Big GET text', async _ctx => {
 	globalInit();
 
-	const d = new Decurl();
+	using d = new Decurl();
 
 	d.setUrl('https://html.spec.whatwg.org/');
 	d.perform();
@@ -39,14 +38,13 @@ Deno.test('Big GET text', async _ctx => {
 
 	assertEquals(new TextDecoder().decode(d.writeFunctionData), fetchRes);
 
-	d.cleanup();
 	globalCleanup();
 })
 
 Deno.test('GET PDF', async _ctx => {
 	globalInit();
 
-	const d = new Decurl();
+	using d = new Decurl();
 
 	d.setUrl('https://html.spec.whatwg.org/print.pdf');
 	d.perform();
@@ -71,8 +69,8 @@ Deno.test('Multiple handles GET', async _ctx => {
 	globalInit();
 
 	const txtDec = new TextDecoder();
-	const d1 = new Decurl();
-	const d2 = new Decurl();
+	using d1 = new Decurl();
+	using d2 = new Decurl();
 
 	d1.setUrl('https://example.com');
 	d2.setUrl('https://example.com');
@@ -90,7 +88,5 @@ Deno.test('Multiple handles GET', async _ctx => {
 	assertEquals(txtDec.decode(d1.writeFunctionData), txtDec.decode(d2.writeFunctionData));
 	assertEquals(txtDec.decode(d2.writeFunctionData), fetchRes);
 
-	d1.cleanup();
-	d2.cleanup();
 	globalCleanup();
 })
