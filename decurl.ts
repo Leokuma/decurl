@@ -109,7 +109,8 @@ export default class Decurl implements Disposable {
 		return sym.easyPerform(this.#p);
 	}
 
-	get writeFunctionData(): Uint8Array | null {
+	/** Get data received by `perform()` and other functions. */
+	getWriteFunctionData(): Uint8Array | null {
 		return this.#writeFunctionData;
 	}
 

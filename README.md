@@ -13,8 +13,10 @@ using decurl = new Decurl();
 decurl.setUrl('https://example.com');
 decurl.perform();
 
-if (decurl.writeFunctionData)
-	console.log(new TextDecoder().decode(decurl.writeFunctionData));
+const response = decurl.getWriteFunctionData();
+
+if (response)
+	console.log(new TextDecoder().decode(response));
 
 globalCleanup();
 ```
