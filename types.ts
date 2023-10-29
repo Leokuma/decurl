@@ -161,8 +161,9 @@ const curlBlobStruct = new AlignedStruct({
 	len: u64,
 	flags: u32
 });
-/** https://github.com/curl/curl/blob/913eacf7730429f3de5d662691154ceb2aee8aa5/include/curl/easy.h#L34 */
-function CurlBlob(data: ArrayBuffer): Deno.PointerValue {
+/** https://github.com/curl/curl/blob/913eacf7730429f3de5d662691154ceb2aee8aa5/include/curl/easy.h#L34
+* @param copy When `false`, `data` must be kept alive and prevented from being garbage collected. When `true`, Curl copies `data`, which can then be discarded safely. */
+function CurlBlob(data: ArrayBuffer, copy = true): Deno.PointerValue {
 	const ptr = Deno.UnsafePointer.of(data);
 	const buf = new ArrayBuffer(20);
 	const dv = new DataView(buf);
@@ -170,7 +171,7 @@ function CurlBlob(data: ArrayBuffer): Deno.PointerValue {
 	curlBlobStruct.write({
 		pData: BigInt(Deno.UnsafePointer.value(ptr)),
 		len: BigInt(data.byteLength),
-		flags: 0
+		flags: +copy
 	}, dv);
 
 	return Deno.UnsafePointer.of(buf);
