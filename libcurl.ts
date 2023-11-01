@@ -9,9 +9,9 @@ const OPT_ID = 'u32';
 /** https://curl.se/libcurl/c/allfuncs.html */
 const libcurl = await dlopen({
 	url: {
-		darwin: '/lib/libcurl.4.dylib',
+		darwin: '/usr/lib/libcurl.4.dylib',
 		linux: {
-			x86_64: '/lib/x86_64-linux-gnu/libcurl.so.4',
+			x86_64: '/usr/lib/x86_64-linux-gnu/libcurl.so.4',
 		},
 		windows: {
 			x86_64: 'https://deno.land/x/decurl@0.7.0/lib/libcurl-x64.dll'
