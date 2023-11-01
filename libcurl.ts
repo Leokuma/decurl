@@ -9,8 +9,12 @@ const OPT_ID = 'u32';
 /** https://curl.se/libcurl/c/allfuncs.html */
 const libcurl = await dlopen({
 	url: {
+		darwin: '/lib/libcurl.4.dylib',
 		linux: {
-			x86_64: 'https://deno.land/x/decurl@0.1.0/bin/libcurl.so'
+			x86_64: '/lib/x86_64-linux-gnu/libcurl.so.4',
+		},
+		windows: {
+			x86_64: 'https://deno.land/x/decurl@0.7.0/lib/libcurl-x64.dll'
 		}
 	}}, {
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},

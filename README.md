@@ -1,33 +1,40 @@
 # Decurl
 [Curl](https://curl.se/libcurl/) bindings for Deno.
 
-The goal of this library is not to provide an ergonomic layer on top of Curl, but to provide a 1:1 usage parity with Curl with a few convenient helpers.
+The goal of this library is not to provide an ergonomic layer on top of Curl, but to provide a 1:1 usage and feature parity with Curl with a few convenient helpers.
 
 ```ts
-import Decurl, {globalInit, globalCleanup} from 'https://deno.land/x/decurl/decurl.ts';
+import Decurl, { globalInit, globalCleanup } from 'https://deno.land/x/decurl/decurl.ts'
 
-globalInit();
+globalInit()
 
-using decurl = new Decurl();
+using decurl = new Decurl()
 
-decurl.setUrl('https://example.com');
-decurl.perform();
+decurl.setSslVerifypeer(0)
+decurl.setUrl('https://example.com')
 
-const response = decurl.getWriteFunctionData();
+const curlCode = decurl.perform()
+const response = decurl.getWriteFunctionData()
+
+console.log(curlCode)
 
 if (response)
-	console.log(new TextDecoder().decode(response));
+  console.log(new TextDecoder().decode(response))
 
-globalCleanup();
+globalCleanup()
 ```
 
 Run with `deno run -A --unstable`.
 
 More examples in the `tests` folder.
 
-`libcurl` must be installed.
+## Requirements
+- Deno >= 1.37.1<sup>[1]</sup>
+- Curl >= 7.73.0<sup>[2]</sup>
+
+<sup>[1]</sup> You can use older versions of Deno as well, but then you will have to call the method [`Decurl.cleanup()`](https://curl.se/libcurl/c/curl_easy_cleanup.html) manually because you won't be able to use [`using`](https://devblogs.microsoft.com/typescript/announcing-typescript-5-2/#using-declarations-and-explicit-resource-management).
+
+<sup>[2]</sup> On Windows you probably won't need to install Curl as Decurl will download and cache [`libcurl.dll`](https://deno.land/x/decurl/lib/libcurl-x64.dll) automatically on first execution.
 
 ## Roadmap
-- **Support Windows and Mac**: currently only works in Linux.
-- **Support ARM**: currently only works in amd64.
-- **Async operations**: currently the entire API is blocking.
+- Async operations.

@@ -1,13 +1,34 @@
 import {assert, assertEquals} from 'https://deno.land/std@0.203.0/assert/mod.ts';
 import Decurl, {globalInit, globalCleanup} from '../decurl.ts';
+import {Code} from '../types.ts';
+
+Deno.test('Readme', () => {
+	globalInit()
+
+	using decurl = new Decurl()
+
+	decurl.setSslVerifypeer(0)
+	decurl.setUrl('https://example.com')
+
+	const curlCode = decurl.perform()
+	const response = decurl.getWriteFunctionData()
+
+	console.log(curlCode)
+
+	if (response)
+		console.log(new TextDecoder().decode(response))
+
+	globalCleanup()
+})
 
 Deno.test('Small GET text', async () => {
 	globalInit();
 
 	using d = new Decurl();
+	d.setSslVerifypeer(0);
 
 	d.setUrl('https://example.com');
-	d.perform();
+	assertEquals(d.perform(), Code.Ok);
 	const dRes = d.getWriteFunctionData();
 	assert(dRes);
 
@@ -22,9 +43,10 @@ Deno.test('Big GET text', async () => {
 	globalInit();
 
 	using d = new Decurl();
+	d.setSslVerifypeer(0);
 
 	d.setUrl('https://html.spec.whatwg.org/');
-	d.perform();
+	assertEquals(d.perform(), Code.Ok);
 	const dRes = d.getWriteFunctionData();
 	assert(dRes);
 
@@ -39,9 +61,10 @@ Deno.test('GET PDF', async () => {
 	globalInit();
 
 	using d = new Decurl();
+	d.setSslVerifypeer(0);
 
 	d.setUrl('https://html.spec.whatwg.org/print.pdf');
-	d.perform();
+	assertEquals(d.perform(), Code.Ok);
 	const dRes = d.getWriteFunctionData();
 	assert(dRes);
 
@@ -59,11 +82,13 @@ Deno.test('Multiple handles GET', async () => {
 
 	using d1 = new Decurl();
 	using d2 = new Decurl();
+	d1.setSslVerifypeer(0);
+	d2.setSslVerifypeer(0);
 
 	d1.setUrl('https://example.com');
 	d2.setUrl('https://example.com');
-	d1.perform();
-	d2.perform();
+	assertEquals(d1.perform(), Code.Ok);
+	assertEquals(d2.perform(), Code.Ok);
 	const d1Res = d1.getWriteFunctionData();
 	const d2Res = d2.getWriteFunctionData();
 	assert(d1Res);
@@ -74,22 +99,6 @@ Deno.test('Multiple handles GET', async () => {
 	const txtDec = new TextDecoder();
 	assertEquals(txtDec.decode(d1Res), txtDec.decode(d2Res));
 	assertEquals(txtDec.decode(d2Res), fetchRes);
-
-	globalCleanup();
-})
-
-Deno.test('Readme', () => {
-	globalInit();
-
-	using decurl = new Decurl();
-
-	decurl.setUrl('https://example.com');
-	decurl.perform();
-
-	const response = decurl.getWriteFunctionData();
-
-	if (response)
-		console.log(new TextDecoder().decode(response));
 
 	globalCleanup();
 })
