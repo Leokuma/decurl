@@ -1,6 +1,7 @@
 import {dlopen} from 'https://deno.land/x/plug@1.0.2/mod.ts';
 
 const CURL_CODE = 'i32';
+const CURL_INFO = 'i32';
 const EASY_HANDLE = 'pointer';
 const MIME_HANDLE = 'pointer';
 const MIME_PART = 'pointer';
@@ -20,8 +21,8 @@ const libcurl = await dlopen({
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},
 	// easyDuphandle: {name: 'curl_easy_duphandle', parameters: ['pointer'], result: 'pointer'},
 	// easyEscape: {name: 'curl_easy_escape', parameters: ['pointer', 'buffer', 'i32'], result: 'buffer'},
-	/** @todo easy_getinfo: {name: 'curl_easy_getinfo', parameters: ['pointer', ] // https://curl.se/libcurl/c/curl_easy_getinfo.html */
-	// easy_header: {name: 'curl_easy_header', parameters: ['pointer', 'buffer', 'usize', 'u32', 'i32', 'pointer'], result: 'i32'},
+	easyGetinfoBuf: {name: 'curl_easy_getinfo', parameters: ['pointer', CURL_INFO, 'buffer'], result: CURL_CODE}, // https://curl.se/libcurl/c/curl_easy_getinfo.html
+	// easy_header: {name: 'curl_easy_header', parameters: ['pointer', 'buffer', 'usize', 'u32', 'i32', 'pointer'], result: 'i32'}, // v7.84.0. https://curl.se/libcurl/c/curl_easy_header.html
 	easyInit: {name: 'curl_easy_init', parameters: [], result: 'pointer'},
 	// easy_nextheader: {name: 'curl_easy_nextheader', parameters: [''], result: ''},
 	easyOptionById: {name: 'curl_easy_option_by_id', parameters: ['u32'], result: 'pointer'},
@@ -32,10 +33,10 @@ const libcurl = await dlopen({
 	// easyRecv: {name: 'curl_easy_recv', parameters: [''], result: ''}, /** @todo */
 	// easyReset: {name: 'curl_easy_reset', parameters: ['pointer'], result: 'void'}, /** @todo */
 	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: CURL_CODE}, /** @todo */
-	easySetoptBuffer: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'buffer'], result: CURL_CODE},
-	easySetoptFunction: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE},
+	easySetoptBuf: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'buffer'], result: CURL_CODE},
+	easySetoptFn: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE},
 	easySetoptU64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'u64'], result: CURL_CODE},
-	easySetoptPointer: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
+	easySetoptPtr: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
 	easySetoptBlob: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
 	easyStrerror: {name: 'curl_easy_strerror', parameters: ['i32'], result: 'buffer'},
 	// easyUnescape: {name: 'curl_easy_unescape', parameters: ['pointer', 'buffer', 'i32', 'pointer'], result: 'buffer'},

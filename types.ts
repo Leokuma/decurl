@@ -1,21 +1,31 @@
+import libcurl from './libcurl.ts';
 import {AlignedStruct} from 'https://deno.land/x/byte_type@0.2.2/types/struct/aligned.ts';
 import {u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
 
+const CURLINFO_STRING = 0x100000;
+const CURLINFO_LONG = 0x200000;
+const CURLINFO_DOUBLE = 0x300000;
+const CURLINFO_SLIST = 0x400000;
+const CURLINFO_PTR = 0x400000;
+const CURLINFO_SOCKET = 0x500000;
+const CURLINFO_OFF_T = 0x600000;
+const ERROR_SIZE = 1024;
+
 enum Auth {
-  None = 0,
-  Basic = 1 << 0,
-  Digest = 1 << 1,
-  Negotiate = 1 << 2,
-  GssNegotiate = Negotiate, // Deprecated since the advent of Negotiate
-  GssApi = Negotiate, // Used for option `SOCKS5_AUTH` to stay terminologically correct
-  Ntlm = 1 << 3,
-  DigestIe = 1 << 4,
-  NtlmWb = 1 << 5,
-  Bearer = 1 << 6,
-  AwsSigV4 = 1 << 7,
-  Only = 2147483648, // "1 << 31" overflows in JS
-  Any = ~DigestIe,
-  AnySafe = ~(Basic | DigestIe),
+	None = 0,
+	Basic = 1 << 0,
+	Digest = 1 << 1,
+	Negotiate = 1 << 2,
+	GssNegotiate = Negotiate, // Deprecated since the advent of Negotiate
+	GssApi = Negotiate, // Used for option `SOCKS5_AUTH` to stay terminologically correct
+	Ntlm = 1 << 3,
+	DigestIe = 1 << 4,
+	NtlmWb = 1 << 5,
+	Bearer = 1 << 6,
+	AwsSigV4 = 1 << 7,
+	Only = 2147483648, // "1 << 31" overflows in JS
+	Any = ~DigestIe,
+	AnySafe = ~(Basic | DigestIe),
 }
 
 /** https://curl.se/libcurl/c/libcurl-errors.html */
@@ -124,43 +134,45 @@ enum Code {
 }
 
 enum EasyType {
-  CURLOT_LONG = 0,    /* long (a range of values) */
-  CURLOT_VALUES,  /*      (a defined set or bitmask) */
-  CURLOT_OFF_T,   /* curl_off_t (a range of values) */
-  CURLOT_OBJECT,  /* pointer (void *) */
-  CURLOT_STRING,  /*         (char * to null-terminated buffer) */
-  CURLOT_SLIST,   /*         (struct curl_slist *) */
-  CURLOT_CBPTR,   /*         (void * passed as-is to a callback) */
-  CURLOT_BLOB,    /* blob (struct curl_blob *) */
-  CURLOT_FUNCTION /* function pointer */
+	CURLOT_LONG = 0,    /* long (a range of values) */
+	CURLOT_VALUES,  /*      (a defined set or bitmask) */
+	CURLOT_OFF_T,   /* curl_off_t (a range of values) */
+	CURLOT_OBJECT,  /* pointer (void *) */
+	CURLOT_STRING,  /*         (char * to null-terminated buffer) */
+	CURLOT_SLIST,   /*         (struct curl_slist *) */
+	CURLOT_CBPTR,   /*         (void * passed as-is to a callback) */
+	CURLOT_BLOB,    /* blob (struct curl_blob *) */
+	CURLOT_FUNCTION /* function pointer */
 };
 
 enum FtpAuth {
-  Default,
-  Ssl,
-  Tls,
+	Default,
+	Ssl,
+	Tls,
 }
 
 /** https://curl.se/libcurl/c/curl_global_init.html */
 enum GlobalInit {
-  Nothing = 0,
-  Ssl = 1 << 0, // no purpose since 7.57.0
-  Win32 = 1 << 1,
-  All = (Ssl | Win32),
-  Default = All,
-  AckEintr = 1 << 2,
+	Nothing = 0,
+	Ssl = 1 << 0, // no purpose since 7.57.0
+	Win32 = 1 << 1,
+	All = (Ssl | Win32),
+	Default = All,
+	AckEintr = 1 << 2,
 }
 
 const txtEnc = new TextEncoder();
-function CString(val: string | number | bigint) {
+
+function CStr(val: string | number | bigint) {
 	return txtEnc.encode(val + '\0');
 }
 
-const curlBlobStruct = new AlignedStruct({
+const CurlBlobStruct = new AlignedStruct({
 	pData: u64,
 	len: u64,
 	flags: u32
 });
+
 /** https://github.com/curl/curl/blob/913eacf7730429f3de5d662691154ceb2aee8aa5/include/curl/easy.h#L34
 * @param copy When `false`, `data` must be kept alive and prevented from being garbage collected. When `true`, Curl copies `data`, which can then be discarded safely. */
 function CurlBlob(data: ArrayBuffer, copy = true): Deno.PointerValue {
@@ -168,7 +180,7 @@ function CurlBlob(data: ArrayBuffer, copy = true): Deno.PointerValue {
 	const buf = new ArrayBuffer(20);
 	const dv = new DataView(buf);
 
-	curlBlobStruct.write({
+	CurlBlobStruct.write({
 		pData: BigInt(Deno.UnsafePointer.value(ptr)),
 		len: BigInt(data.byteLength),
 		flags: +copy
@@ -183,17 +195,19 @@ interface EasyOption {
 	type: EasyType,
 	flags: number
 }
-const curlEasyOptionStruct = new AlignedStruct({
+
+const CurlEasyOptionStruct = new AlignedStruct({
 	pName: u64,
 	curlOption: u32,
 	curlEasytype: u32,
 	flags: u32
 });
+
 function EasyOption(pEasyOption: Deno.PointerObject): EasyOption {
 	const pv = new Deno.UnsafePointerView(pEasyOption);
 	const dv = new DataView(pv.getArrayBuffer(20));
 
-	const struct = curlEasyOptionStruct.read(dv);
+	const struct = CurlEasyOptionStruct.read(dv);
 	const ptrName = Deno.UnsafePointer.create(struct.pName);
 
 	if (!ptrName) throw new Error('Could not parse the EasyOption struct');
@@ -208,7 +222,142 @@ function EasyOption(pEasyOption: Deno.PointerObject): EasyOption {
 	};
 }
 
-const ERROR_SIZE = 1024;
+class DoublePtrChar extends ArrayBuffer {
+	#dv: DataView;
+
+	constructor() {
+		super(8);
+		this.#dv = new DataView(this);
+	}
+
+	getValue(): string | null {
+		const ptr = Deno.UnsafePointer.create(u64.read(this.#dv));
+		if (!ptr)	return null;
+		return new Deno.UnsafePointerView(ptr).getCString();
+	}
+
+	getPtr(): Deno.PointerValue {
+		return Deno.UnsafePointer.create(u64.read(this.#dv));
+	}
+}
+
+const CurlSlist = new AlignedStruct({
+	pData: u64,
+	pNext: u64
+});
+
+class DoublePtrSlist extends ArrayBuffer {
+	#dv: DataView;
+
+	constructor() {
+		super(8);
+		this.#dv = new DataView(this);
+	}
+
+	getPtr(): Deno.PointerValue {
+		return Deno.UnsafePointer.create(u64.read(this.#dv));
+	}
+
+	getValue(): string[] | null {
+		const ptr = Deno.UnsafePointer.create(u64.read(this.#dv));
+		if (!ptr)	return null;
+
+		const ret: string[] = [];
+		let slist = CurlSlist.read(new DataView(new Deno.UnsafePointerView(ptr).getArrayBuffer(16)));
+		do {
+			const pData = Deno.UnsafePointer.create(slist.pData);
+			ret.push(new Deno.UnsafePointerView(pData!).getCString());
+
+			const pNext = Deno.UnsafePointer.create(slist.pNext);
+			if (!pNext) break;
+
+			slist = CurlSlist.read(new DataView(new Deno.UnsafePointerView(pNext).getArrayBuffer(16)));
+		} while (true);
+
+		return ret;
+	}
+
+	freeAll() {
+		libcurl.symbols.slistFreeAll(this.getPtr());
+	}
+}
+
+enum HttpVersion {
+	HttpVersionNone, // setting this means we don't care, and that we'd like the library to choose the best possible for us!
+	HttpVersion10,  // please use HTTP 1.0 in the request
+	HttpVersion11,  // please use HTTP 1.1 in the request
+	HttpVersion20,  // please use HTTP 2 in the request
+	HttpVersion2tls, // use version 2 for HTTPS, version 1.1 for HTTP
+	HttpVersion2PriorKnowledge, // please use HTTP 2 without HTTP/1.1 Upgrade
+	HttpVersion3 = 30, // Use HTTP/3, fallback to HTTP/2 or HTTP/1 if needed. For HTTPS only. For HTTP, this option makes libcurl return error.
+	HttpVersion3only = 31, // Use HTTP/3 without fallback. For HTTPS only. For HTTP, this makes libcurl return error.
+}
+
+enum Info {
+	EffectiveUrl = CURLINFO_STRING + 1,
+	ResponseCode = +CURLINFO_LONG + 2,
+	TotalTime = CURLINFO_DOUBLE + 3,
+	NamelookupTime = CURLINFO_DOUBLE + 4,
+	ConnectTime = CURLINFO_DOUBLE + 5,
+	PretransferTime = CURLINFO_DOUBLE + 6,
+	SizeUploadT = CURLINFO_OFF_T + 7,
+	SizeDownloadT = CURLINFO_OFF_T + 8,
+	SpeedDownloadT = CURLINFO_OFF_T + 9,
+	SpeedUploadT = CURLINFO_OFF_T + 10,
+	HeaderSize = CURLINFO_LONG + 11,
+	RequestSize = CURLINFO_LONG + 12,
+	SslVerifyresult = CURLINFO_LONG   + 13,
+	Filetime = CURLINFO_LONG + 14,
+	FiletimeT = CURLINFO_OFF_T + 14,
+	ContentLengthDownloadT = CURLINFO_OFF_T + 15,
+	ContentLengthUploadT = CURLINFO_OFF_T + 16,
+	StarttransferTime = CURLINFO_DOUBLE + 17,
+	ContentType = CURLINFO_STRING + 18,
+	RedirectTime = CURLINFO_DOUBLE + 19,
+	RedirectCount = CURLINFO_LONG + 20,
+	Private = CURLINFO_STRING + 21,
+	HttpConnectcode = CURLINFO_LONG + 22,
+	HttpauthAvail = CURLINFO_LONG + 23,
+	ProxyauthAvail = CURLINFO_LONG + 24,
+	OsErrno = CURLINFO_LONG + 25,
+	NumConnects = CURLINFO_LONG + 26,
+	SslEngines = CURLINFO_SLIST + 27,
+	Cookielist = CURLINFO_SLIST + 28,
+	FtpEntryPath = CURLINFO_STRING + 30,
+	RedirectUrl = CURLINFO_STRING + 31,
+	PrimaryIp = CURLINFO_STRING + 32,
+	AppconnectTime = CURLINFO_DOUBLE + 33,
+	Certinfo = CURLINFO_PTR + 34,
+	ConditionUnmet = CURLINFO_LONG + 35,
+	RtspSessionId = CURLINFO_STRING + 36,
+	RtspClientCseq = CURLINFO_LONG + 37,
+	RtspServerCseq = CURLINFO_LONG + 38,
+	RtspCseqRecv = CURLINFO_LONG + 39,
+	PrimaryPort = CURLINFO_LONG + 40,
+	LocalIp = CURLINFO_STRING + 41,
+	LocalPort = CURLINFO_LONG + 42,
+	Activesocket = CURLINFO_SOCKET + 44,
+	TlsSslPtr = CURLINFO_PTR + 45,
+	HttpVersion = CURLINFO_LONG + 46,
+	ProxySslVerifyresult = CURLINFO_LONG + 47,
+	Scheme = CURLINFO_STRING + 49,
+	TotalTimeT = CURLINFO_OFF_T + 50,
+	NamelookupTimeT = CURLINFO_OFF_T + 51,
+	ConnectTimeT = CURLINFO_OFF_T + 52,
+	PretransferTimeT = CURLINFO_OFF_T + 53,
+	StarttransferTimeT = CURLINFO_OFF_T + 54,
+	RedirectTimeT  = CURLINFO_OFF_T + 55,
+	AppconnectTimeT = CURLINFO_OFF_T + 56,
+	RetryAfter = CURLINFO_OFF_T + 57,
+	EffectiveMethod = CURLINFO_STRING + 58,
+	ProxyError = CURLINFO_LONG + 59,
+	Referer = CURLINFO_STRING + 60,
+	Cainfo = CURLINFO_STRING + 61,
+	Capath = CURLINFO_STRING + 62,
+	XferId = CURLINFO_OFF_T + 63,
+	ConnId = CURLINFO_OFF_T + 64,
+	Lastone = 64
+}
 
 interface MimePart {
 	name: string,
@@ -224,7 +373,7 @@ interface MimePart {
 // }
 
 /** https://curl.se/libcurl/c/easy_setopt_options.html */
-export enum Opt {
+enum Opt {
 	AbstractUnixSocket = 'ABSTRACT_UNIX_SOCKET', // abstract Unix domain socket
 	AccepttimeoutMs = 'ACCEPTTIMEOUT_MS', // timeout waiting for FTP server to connect back
 	AcceptEncoding = 'ACCEPT_ENCODING', // automatic decompression of HTTP downloads
@@ -531,264 +680,59 @@ export enum Opt {
 	Xoauth2Bearer = 'XOAUTH2_BEARER' // OAuth 2.0 access token
 }
 
-/** https://curl.se/libcurl/c/easy_setopt_options.html */
-// export enum OptCallback {
-// 	ChunkBgnFunction = 'CHUNK_BGN_FUNCTION',
-// 	ChunkEndFunction = 'CHUNK_END_FUNCTION',
-// 	Closesocketfunction = 'CLOSESOCKETFUNCTION',
-// 	ConvFromNetworkFunction = 'CONV_FROM_NETWORK_FUNCTION',
-// 	ConvFromUtf8Function = 'CONV_FROM_UTF8_FUNCTION',
-// 	ConvToNetworkFunction = 'CONV_TO_NETWORK_FUNCTION',
-// 	Debugfunction = 'DEBUGFUNCTION',
-// 	FnmatchFunction = 'FNMATCH_FUNCTION',
-// 	Headerfunction = 'HEADERFUNCTION',
-// 	Hstsreadfunction = 'HSTSREADFUNCTION',
-// 	Hstswritefunction = 'HSTSWRITEFUNCTION',
-// 	Interleavefunction = 'INTERLEAVEFUNCTION',
-// 	Ioctlfunction = 'IOCTLFUNCTION',
-// 	Opensocketfunction = 'OPENSOCKETFUNCTION',
-// 	Prereqfunction = 'PREREQFUNCTION',
-// 	Progressfunction = 'PROGRESSFUNCTION',
-// 	Readfunction = 'READFUNCTION',
-// 	ResolverStartFunction = 'RESOLVER_START_FUNCTION',
-// 	Seekfunction = 'SEEKFUNCTION',
-// 	Sockoptfunction = 'SOCKOPTFUNCTION',
-// 	SshHostkeyfunction = 'SSH_HOSTKEYFUNCTION',
-// 	SshKeyfunction = 'SSH_KEYFUNCTION',
-// 	SslCtxFunction = 'SSL_CTX_FUNCTION',
-// 	Trailerfunction = 'TRAILERFUNCTION',
-// 	Writefunction = 'WRITEFUNCTION',
-// 	Xferinfofunction = 'XFERINFOFUNCTION'
-// }
+enum ProxyCode {
+	Ok,
+	BadAddressType,
+	BadVersion,
+	Closed,
+	Gssapi,
+	GssapiPermsg,
+	GssapiProtection,
+	Identd,
+	IdentdDiffer,
+	LongHostname,
+	LongPasswd,
+	LongUser,
+	NoAuth,
+	RecvAddress,
+	RecvAuth,
+	RecvConnect,
+	RecvReqack,
+	ReplyAddressTypeNotSupported,
+	ReplyCommandNotSupported,
+	ReplyConnectionRefused,
+	ReplyGeneralServerFailure,
+	ReplyHostUnreachable,
+	ReplyNetworkUnreachable,
+	ReplyNotAllowed,
+	ReplyTtlExpired,
+	ReplyUnassigned,
+	RequestFailed,
+	ResolveHost,
+	SendAuth,
+	SendConnect,
+	SendRequest,
+	UnknownFail,
+	UnknownMode,
+	UserRejected
+}
 
-/** https://curl.se/libcurl/c/easy_setopt_options.html */
-// export enum OptNumber {
-// 	AccepttimeoutMs,
-// 	AddressScope,
-// 	Append,
-// 	Autoreferer,
-// 	Buffersize,
-// 	CaCacheTimeout,
-// 	Certinfo,
-// 	Connecttimeout,
-// 	ConnecttimeoutMs,
-// 	ConnectOnly,
-// 	Cookiesession,
-// 	Crlf,
-// 	Dirlistonly,
-// 	DisallowUsernameInUrl,
-// 	DnsCacheTimeout,
-// 	DnsShuffleAddresses,
-// 	DnsUseGlobalCache,
-// 	DohSslVerifyhost,
-// 	DohSslVerifypeer,
-// 	DohSslVerifystatus,
-// 	Expect100TimeoutMs,
-// 	Failonerror,
-// 	Filetime,
-// 	Followlocation,
-// 	ForbidReuse,
-// 	FreshConnect,
-// 	Ftpsslauth,
-// 	FtpCreateMissingDirs,
-// 	FtpFilemethod,
-// 	FtpSkipPasvIp,
-// 	FtpSslCcc,
-// 	FtpUseEprt,
-// 	FtpUseEpsv,
-// 	FtpUsePret,
-// 	GssapiDelegation,
-// 	HappyEyeballsTimeoutMs,
-// 	Haproxyprotocol,
-// 	Header,
-// 	Headeropt,
-// 	HstsCtrl,
-// 	Http09Allowed,
-// 	Httpauth,
-// 	Httpget,
-// 	Httpproxytunnel,
-// 	HttpContentDecoding,
-// 	HttpTransferDecoding,
-// 	HttpVersion,
-// 	IgnoreContentLength,
-// 	Infilesize,
-// 	Ipresolve,
-// 	KeepSendingOnError,
-// 	Localport,
-// 	Localportrange,
-// 	LowSpeedLimit,
-// 	LowSpeedTime,
-// 	MailRcptAllowfails,
-// 	MaxageConn,
-// 	Maxconnects,
-// 	Maxfilesize,
-// 	MaxlifetimeConn,
-// 	Maxredirs,
-// 	MimeOptions,
-// 	Netrc,
-// 	NewDirectoryPerms,
-// 	NewFilePerms,
-// 	Nobody,
-// 	Noprogress,
-// 	Nosignal,
-// 	PathAsIs,
-// 	Pipewait,
-// 	Port,
-// 	Post,
-// 	Postfieldsize,
-// 	Postredir,
-// 	Protocols,
-// 	Proxyauth,
-// 	Proxyport,
-// 	Proxytype,
-// 	ProxySslversion,
-// 	ProxySslOptions,
-// 	ProxySslVerifyhost,
-// 	ProxySslVerifypeer,
-// 	ProxyTransferMode,
-// 	Put,
-// 	QuickExit,
-// 	RedirProtocols,
-// 	ResumeFrom,
-// 	RtspClientCseq,
-// 	RtspRequest,
-// 	RtspServerCseq,
-// 	SaslIr,
-// 	ServerResponseTimeout,
-// 	Socks5Auth,
-// 	Socks5GssapiNec,
-// 	SshAuthTypes,
-// 	SshCompression,
-// 	SslengineDefault,
-// 	Sslversion,
-// 	SslEnableAlpn,
-// 	SslEnableNpn,
-// 	SslFalsestart,
-// 	SslOptions,
-// 	SslSessionidCache,
-// 	SslVerifyhost,
-// 	SslVerifypeer,
-// 	SslVerifystatus,
-// 	StreamWeight,
-// 	SuppressConnectHeaders,
-// 	TcpFastopen,
-// 	TcpKeepalive,
-// 	TcpKeepidle,
-// 	TcpKeepintvl,
-// 	TcpNodelay,
-// 	TftpBlksize,
-// 	TftpNoOptions,
-// 	Timecondition,
-// 	Timeout,
-// 	TimeoutMs,
-// 	Timevalue,
-// 	Transfertext,
-// 	TransferEncoding,
-// 	UnrestrictedAuth,
-// 	UpkeepIntervalMs,
-// 	Upload,
-// 	UploadBuffersize,
-// 	UseSsl,
-// 	Verbose,
-// 	Wildcardmatch,
-// 	WsOptions
-// }
+enum Sslbackend {
+	None = 0,
+	Openssl = 1,
+	Gnutls = 2,
+	Wolfssl = 7,
+	Schannel = 8,
+	Securetransport = 9,
+	Mbedtls = 11,
+	Bearssl = 13,
+	Rustls = 14
+}
+
+const CurlTlssessioninfo = new AlignedStruct({
+	backend: u32,
+	pInternals: u64
+});
 
 
-/** https://curl.se/libcurl/c/easy_setopt_options.html */
-// export enum OptString { 
-// 	AbstractUnixSocket = 'ABSTRACT_UNIX_SOCKET',
-// 	AcceptEncoding = 'ACCEPT_ENCODING',
-// 	Altsvc = 'ALTSVC',
-// 	AltsvcCtrl = 'ALTSVC_CTRL',
-// 	AwsSigv4 = 'AWS_SIGV4',
-// 	Cainfo = 'CAINFO',
-// 	Capath = 'CAPATH',
-// 	Cookie = 'COOKIE',
-// 	Cookiefile = 'COOKIEFILE',
-// 	Cookiejar = 'COOKIEJAR',
-// 	Cookielist = 'COOKIELIST',
-// 	Copypostfields = 'COPYPOSTFIELDS',
-// 	Crlfile = 'CRLFILE',
-// 	Customrequest = 'CUSTOMREQUEST',
-// 	DefaultProtocol = 'DEFAULT_PROTOCOL',
-// 	DnsInterface = 'DNS_INTERFACE',
-// 	DnsLocalIp4 = 'DNS_LOCAL_IP4',
-// 	DnsLocalIp6 = 'DNS_LOCAL_IP6',
-// 	DnsServers = 'DNS_SERVERS',
-// 	DohUrl = 'DOH_URL',
-// 	Egdsocket = 'EGDSOCKET',
-// 	Ftpport = 'FTPPORT',
-// 	FtpAccount = 'FTP_ACCOUNT',
-// 	FtpAlternativeToUser = 'FTP_ALTERNATIVE_TO_USER',
-// 	HaproxyClientIp = 'HAPROXY_CLIENT_IP',
-// 	Hsts = 'HSTS',
-// 	Interface = 'INTERFACE',
-// 	Issuercert = 'ISSUERCERT',
-// 	Keypasswd = 'KEYPASSWD',
-// 	Krblevel = 'KRBLEVEL',
-// 	LoginOptions = 'LOGIN_OPTIONS',
-// 	MailAuth = 'MAIL_AUTH',
-// 	MailFrom = 'MAIL_FROM',
-// 	NetrcFile = 'NETRC_FILE',
-// 	Noproxy = 'NOPROXY',
-// 	Password = 'PASSWORD',
-// 	Pinnedpublickey = 'PINNEDPUBLICKEY',
-// 	PreProxy = 'PRE_PROXY',
-// 	ProtocolsStr = 'PROTOCOLS_STR',
-// 	Proxy = 'PROXY',
-// 	Proxypassword = 'PROXYPASSWORD',
-// 	Proxyusername = 'PROXYUSERNAME',
-// 	Proxyuserpwd = 'PROXYUSERPWD',
-// 	ProxyCainfo = 'PROXY_CAINFO',
-// 	ProxyCapath = 'PROXY_CAPATH',
-// 	ProxyCrlfile = 'PROXY_CRLFILE',
-// 	ProxyIssuercert = 'PROXY_ISSUERCERT',
-// 	ProxyKeypasswd = 'PROXY_KEYPASSWD',
-// 	ProxyPinnedpublickey = 'PROXY_PINNEDPUBLICKEY',
-// 	ProxyServiceName = 'PROXY_SERVICE_NAME',
-// 	ProxySslcert = 'PROXY_SSLCERT',
-// 	ProxySslcerttype = 'PROXY_SSLCERTTYPE',
-// 	ProxySslkey = 'PROXY_SSLKEY',
-// 	ProxySslkeytype = 'PROXY_SSLKEYTYPE',
-// 	ProxySslCipherList = 'PROXY_SSL_CIPHER_LIST',
-// 	ProxyTls13Ciphers = 'PROXY_TLS13_CIPHERS',
-// 	ProxyTlsauthPassword = 'PROXY_TLSAUTH_PASSWORD',
-// 	ProxyTlsauthType = 'PROXY_TLSAUTH_TYPE',
-// 	ProxyTlsauthUsername = 'PROXY_TLSAUTH_USERNAME',
-// 	RandomFile = 'RANDOM_FILE',
-// 	Range = 'RANGE',
-// 	RedirProtocolsStr = 'REDIR_PROTOCOLS_STR',
-// 	Referer = 'REFERER',
-// 	RequestTarget = 'REQUEST_TARGET',
-// 	RtspSessionId = 'RTSP_SESSION_ID',
-// 	RtspStreamUri = 'RTSP_STREAM_URI',
-// 	RtspTransport = 'RTSP_TRANSPORT',
-// 	SaslAuthzid = 'SASL_AUTHZID',
-// 	ServiceName = 'SERVICE_NAME',
-// 	Socks5GssapiService = 'SOCKS5_GSSAPI_SERVICE',
-// 	SshHostPublicKeyMd5 = 'SSH_HOST_PUBLIC_KEY_MD5',
-// 	SshHostPublicKeySha256 = 'SSH_HOST_PUBLIC_KEY_SHA256',
-// 	SshKnownhosts = 'SSH_KNOWNHOSTS',
-// 	SshPrivateKeyfile = 'SSH_PRIVATE_KEYFILE',
-// 	SshPublicKeyfile = 'SSH_PUBLIC_KEYFILE',
-// 	Sslcert = 'SSLCERT',
-// 	Sslcerttype = 'SSLCERTTYPE',
-// 	Sslengine = 'SSLENGINE',
-// 	Sslkey = 'SSLKEY',
-// 	Sslkeytype = 'SSLKEYTYPE',
-// 	SslCipherList = 'SSL_CIPHER_LIST',
-// 	SslEcCurves = 'SSL_EC_CURVES',
-// 	Tls13Ciphers = 'TLS13_CIPHERS',
-// 	TlsauthPassword = 'TLSAUTH_PASSWORD',
-// 	TlsauthType = 'TLSAUTH_TYPE',
-// 	TlsauthUsername = 'TLSAUTH_USERNAME',
-// 	UnixSocketPath = 'UNIX_SOCKET_PATH',
-// 	Url = 'URL',
-// 	Useragent = 'USERAGENT',
-// 	Username = 'USERNAME',
-// 	Userpwd = 'USERPWD',
-// 	Xoauth2Bearer = 'XOAUTH2_BEARER'
-// }
-
-export {Auth, Code, CString, CurlBlob, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit, type MimePart};
+export {Auth, Code, CStr, CurlBlob, CurlTlssessioninfo, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit, HttpVersion, Info, type MimePart, Opt, ProxyCode, Sslbackend};

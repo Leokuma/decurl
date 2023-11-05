@@ -14,12 +14,15 @@ decurl.setSslVerifypeer(0)
 decurl.setUrl('https://example.com')
 
 const curlCode = decurl.perform()
+const responseCode = decurl.getResponseCode()
 const response = decurl.getWriteFunctionData()
 
-console.log(curlCode)
-
-if (response)
+if (response) {
   console.log(new TextDecoder().decode(response))
+}
+
+console.log(responseCode)
+console.log(curlCode)
 
 globalCleanup()
 ```
