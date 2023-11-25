@@ -1,7 +1,6 @@
 import {i32, u32, u64, f64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
 import libcurl from './libcurl.ts';
 import {Auth, Code, CStr, CurlBlob, CurlTlssessioninfo, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, GlobalInit, HttpVersion, Info, MimePart, Opt, ProxyCode, Sslbackend} from './types.ts';
-import {Status as HttpStatus} from 'https://deno.land/std@0.205.0/http/status.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
@@ -227,28 +226,31 @@ export default class Decurl implements Disposable {
 	// setConvToNetworkFunction(val: () => number): Code {
 	// } // = 'CONV_TO_NETWORK_FUNCTION'
 
-	setCookie(val: string): Code {
-		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookie).id, CStr(val))
+	setCookie(data: string): Code {
+		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookie).id, CStr(data))
 	}
 
-	setCookiefile(val: string): Code {
-		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookiefile).id, CStr(val))
+	setCookiefile(filename: string): Code {
+		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookiefile).id, CStr(filename))
 	}
 
-	setCookiejar(val: string): Code {
-		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookiejar).id, CStr(val))
+	setCookiejar(filename: string): Code {
+		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookiejar).id, CStr(filename))
 	}
 
-	setCookielist(val: string): Code {
-		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookielist).id, CStr(val))
+	setCookielist(data: string): Code {
+		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Cookielist).id, CStr(data))
 	}
 
 	setCookiesession(val: number): Code {
 		return sym.easySetoptU64(this.#ptr, this.optionByName(Opt.Cookiesession).id, val);
 	}
 
-	setCopypostfields(val: string): Code {
-		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Copypostfields).id, CStr(val))
+	setCopypostfields(data: string | ArrayBuffer): Code {
+		if (typeof data == 'string')
+			data = CStr(data);
+
+		return sym.easySetoptBuf(this.#ptr, this.optionByName(Opt.Copypostfields).id, data)
 	}
 
 	setCrlf(val: number): Code {
@@ -752,6 +754,7 @@ export default class Decurl implements Disposable {
 		return sym.easySetoptU64(this.#ptr, this.optionByName(Opt.Post).id, val);
 	}
 
+	/** **Careful!** Data is passed by reference. Use `setCopypostfields` to pass by value. */
 	setPostfields(data: string | ArrayBuffer): Code {
 		if (typeof data == 'string')
 			data = CStr(data);
@@ -1389,7 +1392,7 @@ export default class Decurl implements Disposable {
 		return pptr.getValue();
 	}
 
-	getResponseCode(): HttpStatus | 0 {
+	getResponseCode(): number {
 		const buf = new Int32Array(1);
 		sym.easyGetinfoBuf(this.#ptr, Info.ResponseCode, buf);
 		return i32.read(new DataView(buf.buffer));

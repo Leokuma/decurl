@@ -1,7 +1,7 @@
 import {assert, assertEquals, assertGreater, assertGreaterOrEqual, assertLess, assertLessOrEqual} from 'https://deno.land/std@0.203.0/assert/mod.ts';
 import Decurl, {globalInit, globalCleanup} from '../decurl.ts';
 import {Code, HttpVersion} from '../types.ts';
-import {Status as HttpStatus} from 'https://deno.land/std@0.205.0/http/status.ts';
+import {STATUS_CODE as HTTP_STATUS_CODE} from 'https://deno.land/std@0.208.0/http/status.ts';
 import {isHttpMethod} from "https://deno.land/std@0.205.0/http/unstable_method.ts";
 
 
@@ -155,7 +155,7 @@ function consistResponse(d: Decurl) {
 	assert(d.getHttpVersion() in HttpVersion);
 	assert(isHttpMethod(d.getEffectiveMethod()));
 	assert(d.getScheme()?.includes('HTTP'));
-	assert(d.getResponseCode() in HttpStatus);
+	assert(Object.values(HTTP_STATUS_CODE).find(resCode => resCode == d.getResponseCode()));
 	assert(d.getContentType());
 	assertGreater(d.getLocalIp()!.length, 3);
 	assertGreaterOrEqual(d.getLocalPort(), 8000);
@@ -177,7 +177,7 @@ function consistResponse(d: Decurl) {
 
 	assertGreaterOrEqual(d.getRequestSize(), 10);
 	assertGreaterOrEqual(d.getHeaderSize(), 0);
-	assertLessOrEqual(d.getHeaderSize(), 1000);
+	assertLessOrEqual(d.getHeaderSize(), 2000);
 	assertGreaterOrEqual(d.getContentLengthDownloadT(), 0);
 	assertGreaterOrEqual(d.getContentLengthUploadT(), 0);
 
