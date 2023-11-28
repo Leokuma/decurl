@@ -729,10 +729,22 @@ enum Sslbackend {
 	Rustls = 14
 }
 
-const CurlTlssessioninfo = new AlignedStruct({
+const SslbackendStruct = new AlignedStruct({
+	id: u32,
+	pName: u64
+});
+
+enum Sslset {
+	Ok = 0,
+	UnknownBackend,
+	TooLate,
+	NoBackends
+}
+
+const TlssessioninfoStruct = new AlignedStruct({
 	backend: u32,
 	pInternals: u64
 });
 
 
-export {Auth, Code, CStr, CurlBlob, CurlTlssessioninfo, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit, HttpVersion, Info, type MimePart, Opt, ProxyCode, Sslbackend};
+export {Auth, Code, CStr, CurlBlob, TlssessioninfoStruct, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, FtpAuth, GlobalInit, HttpVersion, Info, type MimePart, Opt, ProxyCode, Sslbackend, SslbackendStruct, Sslset};

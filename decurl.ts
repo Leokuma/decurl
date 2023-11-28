@@ -1,9 +1,15 @@
 import {i32, u32, u64, f64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
 import libcurl from './libcurl.ts';
-import {Auth, Code, CStr, CurlBlob, CurlTlssessioninfo, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, GlobalInit, HttpVersion, Info, MimePart, Opt, ProxyCode, Sslbackend} from './types.ts';
+import {Auth, Code, CStr, CurlBlob, TlssessioninfoStruct, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, GlobalInit, HttpVersion, Info, MimePart, Opt, ProxyCode, Sslbackend, Sslset} from './types.ts';
 const sym = libcurl.symbols;
 
 let initialized = false;
+
+/** @todo Implement third param. */
+/** https://curl.se/libcurl/c/curl_global_sslset.html */
+export function globalSslset(id: Sslbackend, name?: string): Sslset {
+	return sym.globalSslset(id, (name ? CStr(name) : null), null);
+}
 
 /** https://curl.se/libcurl/c/curl_global_init.html */
 export function globalInit(globalInit = GlobalInit.Default): Code | null {
@@ -1659,7 +1665,7 @@ export default class Decurl implements Disposable {
 		sym.easyGetinfoBuf(this.#ptr, Info.TlsSslPtr, pptr);
 		const ptr = Deno.UnsafePointer.create(u64.read(new DataView(pptr)));
 		if (!ptr) return null;
-		return CurlTlssessioninfo.read(new DataView(new Deno.UnsafePointerView(ptr).getArrayBuffer(16)));
+		return TlssessioninfoStruct.read(new DataView(new Deno.UnsafePointerView(ptr).getArrayBuffer(TlssessioninfoStruct.byteLength)));
 	}
 
 	getHttpVersion(): HttpVersion {

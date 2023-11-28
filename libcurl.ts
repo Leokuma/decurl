@@ -15,7 +15,7 @@ const libcurl = await dlopen({
 			x86_64: '/usr/lib/x86_64-linux-gnu/libcurl.so.4',
 		},
 		windows: {
-			x86_64: 'https://deno.land/x/decurl@0.7.0/lib/libcurl-x64.dll'
+			x86_64: 'https://deno.land/x/decurl@0.9.0/lib/libcurl-x64_8.4.0.dll'
 		}
 	}}, {
 	easyCleanup: {name: 'curl_easy_cleanup', parameters: ['pointer'], result: 'void'},
@@ -49,7 +49,7 @@ const libcurl = await dlopen({
 	globalCleanup: {name: 'curl_global_cleanup', parameters: [], result: 'void'},
 	globalInit: {name: 'curl_global_init', parameters: ['i64'], result: CURL_CODE},
 	// global_init_mem: {parameters: [''], result: ''},
-	globalSslset: {name: 'curl_global_sslset', parameters: ['u32', 'buffer', 'pointer'], result: 'i32'},
+	globalSslset: {name: 'curl_global_sslset', parameters: ['u32', 'buffer', 'buffer'], result: 'u32'},
 	// global_trace: {name: 'curl_global_trace', parameters: ['buffer'], result: 'i32'},
 	mimeAddpart: {name: 'curl_mime_addpart', parameters: [MIME_HANDLE], result: 'pointer'},
 	mimeData: {name: 'curl_mime_data', parameters: [MIME_PART, 'buffer', 'u64'], result: CURL_CODE},

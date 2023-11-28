@@ -1,8 +1,7 @@
-import {assert, assertEquals, assertGreater, assertGreaterOrEqual, assertLess, assertLessOrEqual} from 'https://deno.land/std@0.203.0/assert/mod.ts';
-import Decurl, {globalInit, globalCleanup} from '../decurl.ts';
-import {Code, HttpVersion} from '../types.ts';
-import {STATUS_CODE as HTTP_STATUS_CODE} from 'https://deno.land/std@0.208.0/http/status.ts';
-import {isHttpMethod} from "https://deno.land/std@0.205.0/http/unstable_method.ts";
+import {assert, assertEquals, assertGreater, assertGreaterOrEqual, assertLess, assertLessOrEqual} from 'https://deno.land/std@0.208.0/assert/mod.ts';
+import Decurl, {globalInit, globalCleanup, globalSslset} from './decurl.ts';
+import {Code, HttpVersion, Sslbackend, Sslset} from './types.ts';
+import {isStatus} from 'https://deno.land/std@0.208.0/http/status.ts';
 
 
 Deno.test('Readme', () => {
@@ -27,54 +26,22 @@ Deno.test('Readme', () => {
 	globalCleanup()
 })
 
-Deno.test('Small GET text', async () => {
-	globalInit();
+Deno.test('Init - SSL backend', () => {
+  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.UnknownBackend);
+  assertEquals(globalSslset(Sslbackend.Openssl), Sslset.Ok);
+  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
+  assertEquals(globalInit(), 0);
+  globalCleanup();
 
-	using d = new Decurl();
-
-	if (Deno.build.os == 'windows')
-		assertEquals(d.setSslVerifypeer(0), Code.Ok);
-
-	assertEquals(d.setUrl('https://example.com'), Code.Ok);
-	assertEquals(d.perform(), Code.Ok);
-	consistResponse(d);
-	assertEquals(d.getResponseCode(), 200);
-	assertEquals(d.getEffectiveUrl(), 'https://example.com/');
-
-	const dRes = d.getWriteFunctionData();
-	assert(dRes);
-
-	const fetchRes = await fetch('https://example.com').then(r => r.text());
-
-	assertEquals(new TextDecoder().decode(dRes), fetchRes);
-
-	globalCleanup();
+	if (Deno.build.os == 'windows') {
+		assertEquals(globalSslset(Sslbackend.Schannel), Sslset.Ok);
+		assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
+		assertEquals(globalInit(), 0);
+		globalCleanup();
+	}
 })
 
-Deno.test('Not found GET', async () => {
-	globalInit();
-
-	using d = new Decurl();
-
-	if (Deno.build.os == 'windows')
-		assertEquals(d.setSslVerifypeer(0), Code.Ok);
-
-	assertEquals(d.setUrl('https://example.com/not_found'), Code.Ok);
-	assertEquals(d.perform(), Code.Ok);
-	consistResponse(d);
-	assertEquals(d.getResponseCode(), 404);
-	assertEquals(d.getEffectiveUrl(), 'https://example.com/not_found');
-	const dRes = d.getWriteFunctionData();
-	assert(dRes);
-
-	const fetchRes = await fetch('https://example.com/not_found').then(r => r.text());
-
-	assertEquals(new TextDecoder().decode(dRes), fetchRes);
-
-	globalCleanup();
-})
-
-Deno.test('Big GET text', async () => {
+Deno.test('GET - Big text', async () => {
 	globalInit();
 
 	using d = new Decurl();
@@ -95,30 +62,7 @@ Deno.test('Big GET text', async () => {
 	globalCleanup();
 })
 
-Deno.test('GET PDF', async () => {
-	globalInit();
-
-	using d = new Decurl();
-
-	if (Deno.build.os == 'windows')
-		assertEquals(d.setSslVerifypeer(0), Code.Ok);
-
-	assertEquals(d.setUrl('https://html.spec.whatwg.org/print.pdf'), Code.Ok);
-	assertEquals(d.perform(), Code.Ok);
-	consistResponse(d);
-	const dRes = d.getWriteFunctionData();
-	assert(dRes);
-
-	const fetchRes = await fetch('https://html.spec.whatwg.org/print.pdf').then(r => r.arrayBuffer());
-
-	const shaDecurl = await crypto.subtle.digest('SHA-256', dRes);
-	const shaFetch = await crypto.subtle.digest('SHA-256', fetchRes);
-	assertEquals(new Uint8Array(shaDecurl), new Uint8Array(shaFetch)); // asserting ArrayBuffers directly doesn't work
-
-	globalCleanup();
-})
-
-Deno.test('Multiple handles GET', async () => {
+Deno.test('GET - Multiple handles', async () => {
 	globalInit();
 
 	using d1 = new Decurl();
@@ -150,12 +94,111 @@ Deno.test('Multiple handles GET', async () => {
 	globalCleanup();
 })
 
+Deno.test('GET - Not found', async () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	assertEquals(d.setUrl('https://example.com/not_found'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
+	consistResponse(d);
+	assertEquals(d.getResponseCode(), 404);
+	assertEquals(d.getEffectiveUrl(), 'https://example.com/not_found');
+	const dRes = d.getWriteFunctionData();
+	assert(dRes);
+
+	const fetchRes = await fetch('https://example.com/not_found').then(r => r.text());
+
+	assertEquals(new TextDecoder().decode(dRes), fetchRes);
+
+	globalCleanup();
+})
+
+Deno.test('GET - PDF', async () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	assertEquals(d.setUrl('https://html.spec.whatwg.org/print.pdf'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
+	consistResponse(d);
+	const dRes = d.getWriteFunctionData();
+	assert(dRes);
+
+	const fetchRes = await fetch('https://html.spec.whatwg.org/print.pdf').then(r => r.arrayBuffer());
+
+	const shaDecurl = await crypto.subtle.digest('SHA-256', dRes);
+	const shaFetch = await crypto.subtle.digest('SHA-256', fetchRes);
+	assertEquals(new Uint8Array(shaDecurl), new Uint8Array(shaFetch)); // asserting ArrayBuffers directly doesn't work
+
+	globalCleanup();
+})
+
+Deno.test('GET - Small text', async () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	assertEquals(d.setUrl('https://example.com'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
+	consistResponse(d);
+	assertEquals(d.getResponseCode(), 200);
+	assertEquals(d.getEffectiveUrl(), 'https://example.com/');
+
+	const dRes = d.getWriteFunctionData();
+	assert(dRes);
+
+	const fetchRes = await fetch('https://example.com').then(r => r.text());
+
+	assertEquals(new TextDecoder().decode(dRes), fetchRes);
+
+	globalCleanup();
+})
+
+Deno.test('Cookies', () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	assertEquals(d.setUrl('https://google.com/'), Code.Ok);
+	assertEquals(d.setFollowlocation(1), Code.Ok);
+	assertEquals(d.setCookiefile(''), Code.Ok); // activate cookie engine. Ref: https://curl.se/libcurl/c/CURLOPT_COOKIEFILE.html
+	d.perform();
+
+	const cookies = d.getCookielist();
+	console.log(cookies);
+	assert(cookies);
+	console.log(d.setCookielist('.localhost\tTRUE\t/\tTRUE\t1702320540\t1P_JAR\t2023-11-11-18'));
+	d.setUrl('http://localhost:8000');
+	console.log(d.perform());
+	assert(d.getCookielist());
+
+	consistResponse(d);
+
+	assert(d.getWriteFunctionData());
+
+	globalCleanup();
+})
+
+
 
 function consistResponse(d: Decurl) {
 	assert(d.getHttpVersion() in HttpVersion);
-	assert(isHttpMethod(d.getEffectiveMethod()));
+	assert(d.getEffectiveMethod() == 'GET' || d.getEffectiveMethod() == 'POST');
 	assert(d.getScheme()?.includes('HTTP'));
-	assert(Object.values(HTTP_STATUS_CODE).find(resCode => resCode == d.getResponseCode()));
+	assert(isStatus(d.getResponseCode()));
 	assert(d.getContentType());
 	assertGreater(d.getLocalIp()!.length, 3);
 	assertGreaterOrEqual(d.getLocalPort(), 8000);
