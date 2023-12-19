@@ -4,6 +4,22 @@ import {Code, HttpVersion, Sslbackend, Sslset} from './types.ts';
 import {isStatus} from 'https://deno.land/std@0.208.0/http/status.ts';
 
 
+/** This must be the first test. */
+Deno.test('Init - SSL backend', () => {
+  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.UnknownBackend);
+  assertEquals(globalSslset(Sslbackend.Openssl), Sslset.Ok);
+  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
+  assertEquals(globalInit(), 0);
+  globalCleanup();
+
+	if (Deno.build.os == 'windows') {
+		assertEquals(globalSslset(Sslbackend.Schannel), Sslset.Ok);
+		assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
+		assertEquals(globalInit(), 0);
+		globalCleanup();
+	}
+})
+
 Deno.test('Readme', () => {
 	globalInit()
 
@@ -24,21 +40,6 @@ Deno.test('Readme', () => {
 	console.log(curlCode)
 
 	globalCleanup()
-})
-
-Deno.test('Init - SSL backend', () => {
-  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.UnknownBackend);
-  assertEquals(globalSslset(Sslbackend.Openssl), Sslset.Ok);
-  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
-  assertEquals(globalInit(), 0);
-  globalCleanup();
-
-	if (Deno.build.os == 'windows') {
-		assertEquals(globalSslset(Sslbackend.Schannel), Sslset.Ok);
-		assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
-		assertEquals(globalInit(), 0);
-		globalCleanup();
-	}
 })
 
 Deno.test('GET - Big text', async () => {
@@ -164,7 +165,7 @@ Deno.test('GET - Small text', async () => {
 	globalCleanup();
 })
 
-Deno.test('Cookies', () => {
+Deno.test('GET - Headers', async () => {
 	globalInit();
 
 	using d = new Decurl();
@@ -172,26 +173,25 @@ Deno.test('Cookies', () => {
 	if (Deno.build.os == 'windows')
 		assertEquals(d.setSslVerifypeer(0), Code.Ok);
 
-	assertEquals(d.setUrl('https://google.com/'), Code.Ok);
-	assertEquals(d.setFollowlocation(1), Code.Ok);
-	assertEquals(d.setCookiefile(''), Code.Ok); // activate cookie engine. Ref: https://curl.se/libcurl/c/CURLOPT_COOKIEFILE.html
-	d.perform();
-
-	const cookies = d.getCookielist();
-	console.log(cookies);
-	assert(cookies);
-	console.log(d.setCookielist('.localhost\tTRUE\t/\tTRUE\t1702320540\t1P_JAR\t2023-11-11-18'));
-	d.setUrl('http://localhost:8000');
-	console.log(d.perform());
-	assert(d.getCookielist());
-
+	assertEquals(d.setUrl('https://example.com'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
 	consistResponse(d);
+	assertEquals(d.getResponseCode(), 200);
 
-	assert(d.getWriteFunctionData());
+	const headers = d.getHeaderFunctionData();
+	assert(headers);
+	assert(headers.get('content-length'));
+	assert(headers.get('age'));
+	assert(headers.get('date'));
+	assert(headers.get('x-cache'));
+
+	const fetchRes = await fetch('https://example.com');
+	await fetchRes.arrayBuffer();
+
+	assertEquals(headers.get('content-type'), fetchRes.headers.get('content-type'));
 
 	globalCleanup();
 })
-
 
 
 function consistResponse(d: Decurl) {

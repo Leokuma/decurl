@@ -47,6 +47,12 @@ export default class Decurl implements Disposable {
 		readonly result: 'usize';
 	}>;
 	#writeFunctionData: Uint8Array | null = null;
+	#headerFunction: null | ((chunk: ArrayBuffer) => void) = null;
+	#_headerFunction: null | Deno.UnsafeCallback<{
+		readonly parameters: readonly ['buffer', 'i32', 'i32', 'pointer'];
+		readonly result: 'usize';
+	}>;
+	#headerFunctionData: Headers | null = null;
 	/** Curl handle. */
 	#ptr: Deno.PointerValue;
 
@@ -80,8 +86,42 @@ export default class Decurl implements Disposable {
 
 			return size;
 		});
-
 		sym.easySetoptFn(this.#ptr, this.optionByName(Opt.Writefunction).id, this.#_writeFunction.pointer);
+
+		this.#_headerFunction = new Deno.UnsafeCallback({
+			parameters: ['buffer', 'i32', 'i32', 'pointer'],
+			result: 'usize'
+		}, (pBuf: Deno.PointerValue, _size: number, nitems: number, _customP: Deno.PointerValue): number => {
+			if (!pBuf)
+				throw new Error('Null pointer');
+
+			const retBuf = Deno.UnsafePointerView.getArrayBuffer(pBuf, nitems);
+			const retStr = txtDec.decode(retBuf).trim();
+			const colonPos = retStr.indexOf(':');
+
+			if (!retStr)
+				return nitems;
+
+			if (colonPos == -1) {
+				const cookies = this.#headerFunctionData?.getSetCookie();
+				this.#headerFunctionData = new Headers();
+
+				if (cookies)
+					for (const cookie of cookies)
+						this.#headerFunctionData.append('set-cookie', cookie);
+
+				return nitems;
+			}
+
+			this.#headerFunctionData ??= new Headers();
+			this.#headerFunctionData.append(retStr.substring(0, colonPos).trim(), retStr.substring(colonPos + 1).trim());
+
+			if (this.#headerFunction)
+				this.#headerFunction(retBuf);
+
+			return nitems;
+		});
+		sym.easySetoptFn(this.#ptr, this.optionByName(Opt.Headerfunction).id, this.#_headerFunction.pointer);
 	}
 
 	init(): Deno.PointerValue {
@@ -98,6 +138,10 @@ export default class Decurl implements Disposable {
 		this.#_writeFunction = null;
 		this.#writeFunction = null;
 		this.#writeFunctionData = null;
+		this.#_headerFunction?.close();
+		this.#_headerFunction = null;
+		this.#headerFunction = null;
+		this.#headerFunctionData = null;
 		this.#ptr = null;
 	}
 
@@ -117,6 +161,11 @@ export default class Decurl implements Disposable {
 		this.#errorBuffer = null;
 		this.#writeFunctionData = null;
 		return sym.easyPerform(this.#ptr);
+	}
+
+	/** Get headers received by `perform()`. */
+	getHeaderFunctionData(): Headers | null {
+		return this.#headerFunctionData;
 	}
 
 	/** Get data received by `perform()` and other functions. */
