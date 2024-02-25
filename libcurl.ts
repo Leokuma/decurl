@@ -1,4 +1,4 @@
-import {dlopen} from 'https://deno.land/x/plug@1.0.2/mod.ts';
+import {dlopen} from 'https://deno.land/x/plug@1.0.3/mod.ts';
 
 const CURL_CODE = 'i32';
 const CURL_INFO = 'i32';

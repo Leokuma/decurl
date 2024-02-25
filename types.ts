@@ -1,6 +1,6 @@
 import libcurl from './libcurl.ts';
-import {AlignedStruct} from 'https://deno.land/x/byte_type@0.2.2/types/struct/aligned.ts';
-import {u32, u64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
+import {Struct} from 'https://deno.land/x/byte_type@0.3.0/src/compound/struct.ts';
+import {u32, u64} from 'https://deno.land/x/byte_type@0.3.0/src/primitives/mod.ts';
 
 const CURLINFO_STRING = 0x100000;
 const CURLINFO_LONG = 0x200000;
@@ -167,7 +167,7 @@ function CStr(val: string | number | bigint) {
 	return txtEnc.encode(val + '\0');
 }
 
-const CurlBlobStruct = new AlignedStruct({
+const CurlBlobStruct = new Struct({
 	pData: u64,
 	len: u64,
 	flags: u32
@@ -196,7 +196,7 @@ interface EasyOption {
 	flags: number
 }
 
-const CurlEasyOptionStruct = new AlignedStruct({
+const CurlEasyOptionStruct = new Struct({
 	pName: u64,
 	curlOption: u32,
 	curlEasytype: u32,
@@ -241,7 +241,7 @@ class DoublePtrChar extends ArrayBuffer {
 	}
 }
 
-const CurlSlist = new AlignedStruct({
+const CurlSlist = new Struct({
 	pData: u64,
 	pNext: u64
 });
@@ -729,7 +729,7 @@ enum Sslbackend {
 	Rustls = 14
 }
 
-const SslbackendStruct = new AlignedStruct({
+const SslbackendStruct = new Struct({
 	id: u32,
 	pName: u64
 });
@@ -741,7 +741,7 @@ enum Sslset {
 	NoBackends
 }
 
-const TlssessioninfoStruct = new AlignedStruct({
+const TlssessioninfoStruct = new Struct({
 	backend: u32,
 	pInternals: u64
 });

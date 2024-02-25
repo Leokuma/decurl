@@ -1,4 +1,4 @@
-import {i32, u32, u64, f64} from 'https://deno.land/x/byte_type@0.2.2/types/primitive/mod.ts';
+import {i32, u32, u64, f64} from 'https://deno.land/x/byte_type@0.3.0/src/primitives/mod.ts';
 import libcurl from './libcurl.ts';
 import {Auth, Code, CStr, CurlBlob, TlssessioninfoStruct, DoublePtrChar, DoublePtrSlist, EasyOption, ERROR_SIZE, GlobalInit, HttpVersion, Info, MimePart, Opt, ProxyCode, Sslbackend, Sslset} from './types.ts';
 const sym = libcurl.symbols;
@@ -1714,7 +1714,7 @@ export default class Decurl implements Disposable {
 		sym.easyGetinfoBuf(this.#ptr, Info.TlsSslPtr, pptr);
 		const ptr = Deno.UnsafePointer.create(u64.read(new DataView(pptr)));
 		if (!ptr) return null;
-		return TlssessioninfoStruct.read(new DataView(new Deno.UnsafePointerView(ptr).getArrayBuffer(TlssessioninfoStruct.byteLength)));
+		return TlssessioninfoStruct.read(new DataView(new Deno.UnsafePointerView(ptr).getArrayBuffer(12)));
 	}
 
 	getHttpVersion(): HttpVersion {

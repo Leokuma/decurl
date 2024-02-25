@@ -1,6 +1,6 @@
 import {assert, assertEquals, assertGreater, assertGreaterOrEqual, assertLess, assertLessOrEqual} from 'https://deno.land/std@0.208.0/assert/mod.ts';
 import Decurl, {globalInit, globalCleanup, globalSslset} from './decurl.ts';
-import {Code, HttpVersion, Sslbackend, Sslset} from './types.ts';
+import {Code, HttpVersion, Opt, Sslbackend, Sslset} from './types.ts';
 import {isStatus} from 'https://deno.land/std@0.208.0/http/status.ts';
 
 
@@ -40,6 +40,25 @@ Deno.test('Readme', () => {
 
 	globalCleanup()
 })
+
+Deno.test('optionByName', () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	assert(d.optionByName(Opt.Url));
+	assert(d.optionByName(Opt.Connecttimeout));
+	assert(d.optionByName(Opt.Cookiefile));
+	assert(d.optionByName(Opt.Copypostfields));
+	assert(d.optionByName(Opt.Headerfunction));
+	assert(d.optionByName(Opt.Httpheader));
+	assert(d.optionByName(Opt.Password));
+	assert(d.optionByName(Opt.Postfields));
+	assert(d.optionByName(Opt.Post));
+	assert(d.optionByName(Opt.SslcertBlob));
+
+	globalCleanup();
+});
 
 Deno.test('GET - Big text', async () => {
 	globalInit();
