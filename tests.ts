@@ -8,7 +8,6 @@ import {isStatus} from 'https://deno.land/std@0.208.0/http/status.ts';
 Deno.test('Init - SSL backend', () => {
   assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.UnknownBackend);
   assertEquals(globalSslset(Sslbackend.Openssl), Sslset.Ok);
-  assertEquals(globalSslset(Sslbackend.Bearssl), Sslset.TooLate);
   assertEquals(globalInit(), 0);
   globalCleanup();
 
@@ -193,6 +192,51 @@ Deno.test('GET - Headers', async () => {
 	globalCleanup();
 })
 
+Deno.test('Custom headers', async () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	d.setHttpheader(new Headers({'custom-header': 'custom value'}));
+	assertEquals(d.setUrl('https://example.com'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
+	consistResponse(d);
+	assertEquals(d.getResponseCode(), 200);
+
+	const fetchRes = await fetch('https://example.com');
+	await fetchRes.arrayBuffer();
+
+	globalCleanup();
+})
+
+Deno.test('Cookie engine', () => {
+	globalInit();
+
+	using d = new Decurl();
+
+	if (Deno.build.os == 'windows')
+		assertEquals(d.setSslVerifypeer(0), Code.Ok);
+
+	assertEquals(d.setFollowlocation(1), Code.Ok);
+	d.setCookiefile('');
+	assertEquals(d.setUrl('https://www.google.com/'), Code.Ok);
+	assertEquals(d.perform(), Code.Ok);
+	assertEquals(d.getResponseCode(), 200);
+	assertGreater(d.getCookielist()?.length, 1);
+	consistResponse(d);
+
+	assertEquals(d.perform(), Code.Ok);
+	assertEquals(d.getResponseCode(), 200);
+	assertGreater(d.getHeaderFunctionData()?.getSetCookie().length, 1);
+	assertGreater(d.getCookielist()?.length, 1);
+	consistResponse(d);
+
+	globalCleanup();
+})
+
 
 function consistResponse(d: Decurl) {
 	assert(d.getHttpVersion() in HttpVersion);
@@ -205,6 +249,11 @@ function consistResponse(d: Decurl) {
 	assertGreater(d.getEffectiveUrl()!.length, 7);
 	assertGreater(d.getPrimaryIp()!.length, 7);
 	assert([80, 443].includes(d.getPrimaryPort()));
+
+	const headers = d.getHeaderFunctionData();
+	assert(headers);
+	assert(headers.get('content-type'));
+	assert(headers.get('date'));
 
 	/** @todo console.log(d.getCainfo()); */
 

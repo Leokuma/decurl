@@ -555,7 +555,7 @@ export default class Decurl implements Disposable {
 		return sym.easySetoptU64(this.#ptr, this.optionByName(Opt.Httpget).id, val);
 	}
 
-	setHttpheader(headers: Record<string, string | number | bigint>): Code {
+	setHttpheader(headers: Headers): Code {
 		sym.slistFreeAll(this.#httpHeaderList);
 		this.#httpHeaderList = null;
 
