@@ -34,7 +34,7 @@ const libcurl = await dlopen({
 	// easyReset: {name: 'curl_easy_reset', parameters: ['pointer'], result: 'void'}, /** @todo */
 	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: CURL_CODE}, /** @todo */
 	easySetoptBuf: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'buffer'], result: CURL_CODE},
-	easySetoptFn: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE},
+	easySetoptFn: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE, callback: true},
 	easySetoptI64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'i64'], result: CURL_CODE},
 	easySetoptU64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'u64'], result: CURL_CODE},
 	easySetoptPtr: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
