@@ -29,12 +29,12 @@ const libcurl = await dlopen({
 	easyOptionByName: {name: 'curl_easy_option_by_name', parameters: ['buffer'], result: 'pointer'},
 	// easy_option_next: {name: 'curl_easy_option_next', parameters: [''], result: ''},
 	// easy_pause: {name: 'curl_easy_pause', parameters: [''], result: ''},
-	easyPerform: {name: 'curl_easy_perform', parameters: [EASY_HANDLE], result: CURL_CODE},
+	easyPerform: {name: 'curl_easy_perform', parameters: [EASY_HANDLE], result: CURL_CODE, callback: true},
 	// easyRecv: {name: 'curl_easy_recv', parameters: [''], result: ''}, /** @todo */
 	// easyReset: {name: 'curl_easy_reset', parameters: ['pointer'], result: 'void'}, /** @todo */
 	// easySend: {name: 'curl_easy_send', parameters: ['pointer', 'pointer', 'usize', 'pointer'], result: CURL_CODE}, /** @todo */
 	easySetoptBuf: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'buffer'], result: CURL_CODE},
-	easySetoptFn: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE, callback: true},
+	easySetoptFn: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'function'], result: CURL_CODE},
 	easySetoptI64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'i64'], result: CURL_CODE},
 	easySetoptU64: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'u64'], result: CURL_CODE},
 	easySetoptPtr: {name: 'curl_easy_setopt', parameters: [EASY_HANDLE, OPT_ID, 'pointer'], result: CURL_CODE},
